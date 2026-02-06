@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard | BarberDyy</title>
+    
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    
+  
+    <link rel="stylesheet" href="assets/css/dashboard.css"> 
+    <link rel="stylesheet" href="assets/css/responsive.css">
+    
+
+    </head>
+<body>
+
+    <nav class="navbar">
+        <div class="container">
+            <a href="index.html" class="logo"><span>Barber<span>Dyy</span></span></a>
+            <div class="navbar-nav">
+                <a href="dashboard.html" class="nav-link active">Dashboard</a>
+                <a href="booking.html" class="nav-link">Booking</a>
+                <a href="my-bookings.html" class="nav-link">History</a>
+            </div>
+            <div class="user-dropdown">
+                <div class="dropdown-toggle" onclick="toggleDropdown()">
+                    <div class="avatar-initials" id="navAvatar">U</div>
+                    <span id="navUserName">User</span>
+                    <i class="fas fa-chevron-down" style="font-size: 0.8rem;"></i>
+                </div>
+                <div class="dropdown-menu" id="userMenu">
+                    <a href="profile.html" class="dropdown-item"><i class="fas fa-user-cog"></i> Edit Profile</a>
+                    <button class="dropdown-item" onclick="logout()"><i class="fas fa-sign-out-alt"></i> Logout</button>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container dashboard">
+        <div class="dashboard-header">
+            <div>
+                <h1 class="page-title">Dashboard</h1>
+                <p class="page-subtitle">Selamat datang kembali! Kelola jadwal cukur Anda dengan mudah.</p>
+            </div>
+            <a href="booking.html" class="btn-booking-hero"><i class="fas fa-plus-circle"></i> Booking Baru</a>
+        </div>
+
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-icon icon-gold"><i class="fas fa-calendar-check"></i></div>
+                <div><div class="stat-value" id="totalBookings">0</div><div class="stat-label">TOTAL BOOKING</div></div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon icon-blue"><i class="fas fa-clock"></i></div>
+                <div><div class="stat-value" id="activeBookings">0</div><div class="stat-label">MENUNGGU / AKTIF</div></div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon icon-green"><i class="fas fa-check-circle"></i></div>
+                <div><div class="stat-value" id="completedBookings">0</div><div class="stat-label">SELESAI</div></div>
+            </div>
+        </div>
+
+        <div class="dashboard-content-wrapper">
+            
+            <div class="content-card">
+                <h3 style="margin-bottom: 25px; color:#fff; display:flex; align-items:center; gap:10px; font-size:1.2rem;">
+                    <i class="fas fa-calendar-day" style="color:var(--primary);"></i> Jadwal Cukur Terdekat
+                </h3>
+                <div id="upcomingBookingsContainer">
+                    <div style="text-align:center; padding: 40px; color: #666; border: 2px dashed rgba(255,255,255,0.1); border-radius: 12px;">
+                        <i class="fas fa-spinner fa-spin" style="font-size: 2rem; margin-bottom: 15px; color: var(--primary);"></i>
+                        <p>Memuat data booking...</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="content-card member-card">
+                <span class="member-pill" id="memberBadgeStatus">NON MEMBER</span>
+                <div class="member-avatar" id="cardAvatar"><span class="avatar-text">U</span></div>
+                <h3 class="member-name" id="dashboardUserName">Loading...</h3>
+                <span class="member-email" id="dashboardUserEmail">loading@example.com</span>
+                
+                <div class="member-info-container">
+                    <div class="member-info-row">
+                        <div class="info-label"><i class="fas fa-phone"></i> Telepon</div>
+                        <div class="info-value" id="dashboardUserPhone">-</div>
+                    </div>
+                    <div class="member-info-row">
+                        <div class="info-label"><i class="fas fa-crown"></i> Status</div>
+                        <div class="info-value" id="memberStatusText" style="color: #888;">Regular</div>
+                    </div>
+
+                    <div id="joinMemberArea" style="margin-top: 20px; display: none;">
+                        <p style="font-size: 0.8rem; color: #aaa; margin-bottom: 15px;">Diskon 20% & Prioritas Booking!</p>
+                        <button class="btn-primary" style="width: 100%; justify-content: center;" onclick="openPaymentModal()">
+                            Upgrade Member (Rp 50k)
+                        </button>
+                    </div>
+
+                    <div id="activeMemberArea" style="margin-top: 15px; display: none; text-align: center;">
+                        <div style="color: #2ecc71; font-weight: bold; margin-bottom: 5px;"><i class="fas fa-check-circle"></i> Member Aktif</div>
+                        <small style="color: #666; font-size: 0.75rem;" id="memberExpiryText">Exp: -</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="paymentModal" class="modal-overlay">
+        <div class="modal-container">
+            <div class="modal-header">
+                <h3 style="color:#fff;">Upgrade Premium</h3>
+                <span class="close-modal" onclick="closePaymentModal()" style="color:#888; cursor:pointer; font-size:1.5rem;">&times;</span>
+            </div>
+            
+            <div class="modal-body">
+                <p style="color:#aaa; font-size:0.9rem; margin-bottom:20px;">Silakan pilih metode pembayaran untuk berlangganan.</p>
+                <div style="background: rgba(212, 175, 55, 0.1); border: 1px solid var(--primary); padding: 15px; text-align: center; border-radius: 8px; font-weight: bold; margin-bottom: 20px; color: #fff;">
+                    Total: <span style="color:var(--primary);">Rp 50.000</span>
+                </div>
+
+                <label style="display:block; margin-bottom:10px; font-weight:bold; color:#fff;">Metode Pembayaran:</label>
+                <div class="payment-methods">
+                    <div class="method-item" onclick="selectMethod('qris', this)"><i class="fas fa-qrcode"></i> QRIS</div>
+                    <div class="method-item" onclick="selectMethod('bank', this)"><i class="fas fa-university"></i> Transfer Bank</div>
+                </div>
+
+                <div id="qrisContent" style="display:none; text-align:center;">
+                    <p style="font-size:0.9rem; margin-bottom:10px; color:#ccc;">Scan QRIS di bawah ini:</p>
+                    <img src="assets/images/qris.jpg" alt="QRIS" style="width: 200px; border-radius: 10px; border: 2px solid #fff; margin: 0 auto;">
+                </div>
+
+                <div id="bankContent" style="display:none;">
+                    <div style="background:#2a2a2a; padding:15px; border-radius:8px; border:1px dashed #555;">
+                        <p style="margin:0; color:#888; font-size:0.8rem;">Bank BRI</p>
+                        <h2 style="margin:5px 0; color:var(--primary); letter-spacing:1px;">1688 0100 2541 538</h2>
+                        <p style="margin:0; color:#fff; font-size:0.9rem;">A.N. Adi Prasetyo</p>
+                    </div>
+                </div>
+
+                <div id="uploadSection" style="display:none; margin-top: 20px; border-top: 1px solid #333; padding-top: 20px;">
+                    <label style="display:block; margin-bottom:10px; font-weight:bold; color:#fff;">Upload Bukti Transfer:</label>
+                    <input type="file" id="paymentProofInput" accept="image/*" style="width: 100%; background: #2a2a2a; color: #fff; padding: 10px; border-radius: 5px; border: 1px solid #444;">
+                    <small style="color:#888; display:block; margin-top:5px;">Format: JPG, PNG, JPEG.</small>
+                </div>
+
+                <button id="btnConfirmPayment" class="btn-primary" style="width:100%; margin-top:20px; display:none; justify-content: center;" onclick="processPayment()">
+                    Kirim Bukti Pembayaran <i class="fas fa-paper-plane" style="margin-left:8px;"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script src="assets/js/utils.js"></script>
+    <script src="assets/js/dashboard.js"></script>
+    <script>
+        // Inline script untuk toggle dropdown & logout
+        function toggleDropdown() { const menu = document.getElementById('userMenu'); menu.style.display = (menu.style.display === 'block') ? 'none' : 'block'; }
+        window.onclick = function(event) { if (!event.target.closest('.user-dropdown')) { const menu = document.getElementById('userMenu'); if (menu) menu.style.display = 'none'; } }
+    </script>
+</body>
+</html>

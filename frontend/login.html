@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login | BarberDyy</title>
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Outfit:wght@500;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <style>
+        :root {
+            --bg-body: #0f172a;       
+            --bg-card: #1e293b;       
+            --primary: #d4af37;       
+            --primary-hover: #b89628;
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+            --border-color: rgba(255, 255, 255, 0.1);
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg-body);
+            color: var(--text-main);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background-image: linear-gradient(rgba(15, 23, 42, 0.9), rgba(15, 23, 42, 0.9)), url('assets/images/barbershop-interior.jpg');
+            background-size: cover;
+            background-position: center;
+        }
+
+        .auth-container {
+            width: 100%;
+            display: flex;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .auth-card {
+            background: rgba(30, 41, 59, 0.95); 
+            backdrop-filter: blur(10px);
+            padding: 40px;
+            border-radius: 16px;
+            border: 1px solid var(--border-color);
+            width: 100%;
+            max-width: 420px;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+            animation: fadeInUp 0.6s cubic-bezier(0.22, 1, 0.36, 1);
+        }
+
+        .auth-header { text-align: center; margin-bottom: 30px; }
+        
+        .auth-logo {
+            font-family: 'Outfit', sans-serif;
+            font-size: 2rem; font-weight: 800; color: white; margin-bottom: 5px;
+            display: inline-block;
+        }
+        .auth-logo span { color: var(--primary); }
+
+        .auth-subtitle { color: var(--text-muted); font-size: 0.95rem; margin-top: 5px; }
+
+        .form-group { margin-bottom: 20px; }
+        
+        .form-label { 
+            display: block; margin-bottom: 8px; 
+            font-weight: 500; font-size: 0.9rem; color: var(--text-main); 
+        }
+
+        .input-with-icon { position: relative; }
+        
+        .form-input {
+            width: 100%;
+            padding: 12px 15px 12px 45px; 
+            background-color: rgba(15, 23, 42, 0.6);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            color: white;
+            font-family: 'Inter', sans-serif;
+            font-size: 0.95rem;
+            transition: 0.3s;
+        }
+        
+        .form-input:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(212, 175, 55, 0.1);
+            background-color: rgba(15, 23, 42, 0.8);
+        }
+
+        .input-icon {
+            position: absolute; left: 15px; top: 50%; transform: translateY(-50%);
+            color: var(--text-muted); transition: 0.3s; font-size: 1.1rem;
+        }
+        
+        .form-input:focus + .input-icon, 
+        .input-with-icon:focus-within .input-icon { 
+            color: var(--primary); 
+        }
+
+        .btn-auth {
+            width: 100%; padding: 12px;
+            background: var(--primary); color: #0f172a;
+            border: none; border-radius: 50px;
+            font-weight: 700; font-size: 1rem; cursor: pointer;
+            transition: 0.3s; margin-top: 10px;
+            display: flex; align-items: center; justify-content: center; gap: 8px;
+        }
+        .btn-auth:hover {
+            background: var(--primary-hover);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(212, 175, 55, 0.3);
+        }
+        .btn-auth:disabled { background: #475569; cursor: not-allowed; }
+
+        .auth-footer { text-align: center; margin-top: 25px; font-size: 0.9rem; color: var(--text-muted); }
+        .auth-footer a { color: var(--primary); text-decoration: none; font-weight: 600; transition: 0.3s; }
+        .auth-footer a:hover { color: white; text-decoration: underline; }
+
+        .back-link {
+            display: inline-block; margin-top: 15px; font-size: 0.85rem; color: var(--text-muted); text-decoration: none;
+        }
+        .back-link:hover { color: white; }
+
+        @keyframes fadeInUp {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+    </style>
+</head>
+<body>
+    <div class="auth-container">
+        <div class="auth-card">
+            <div class="auth-header">
+                <div class="auth-logo">Barber<span>Dyy</span></div>
+                <p class="auth-subtitle">Masuk untuk mengatur jadwal cukur Anda</p>
+            </div>
+            
+            <form id="loginForm">
+                <div class="form-group">
+                    <label for="email" class="form-label">Email Address</label>
+                    <div class="input-with-icon">
+                        <input type="email" id="email" class="form-input" placeholder="contoh@email.com" required>
+                        <i class="fas fa-envelope input-icon"></i>
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label for="password" class="form-label">Password</label>
+                    <div class="input-with-icon">
+                        <input type="password" id="password" class="form-input" placeholder="Masukkan password" required>
+                        <i class="fas fa-lock input-icon"></i>
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <button type="submit" class="btn-auth">
+                        <i class="fas fa-sign-in-alt"></i> Masuk Sekarang
+                    </button>
+                </div>
+                
+                <div class="auth-footer">
+                    <p>Belum punya akun? <a href="register.html">Daftar di sini</a></p>
+                    <a href="index.html" class="back-link"><i class="fas fa-arrow-left"></i> Kembali ke Beranda</a>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            localStorage.removeItem('token');
+            localStorage.removeItem('user');
+        });
+    </script>
+    <script src="assets/js/utils.js"></script>
+    <script src="assets/js/login.js"></script>
+</body>
+</html>

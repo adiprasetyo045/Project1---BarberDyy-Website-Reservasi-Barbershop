@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Data Pengguna | Admin Panel</title>
+    
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <link rel="stylesheet" href="../assets/css/admin.css">
+</head>
+<body>
+
+    <div class="app-container">
+        
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <div class="logo"><span>Barber<span class="text-gold">Dyy</span></span></div>
+            </div>
+
+            <ul class="sidebar-menu">
+                <li class="menu-header">Main Menu</li>
+                <li>
+                    <a href="admin-dashboard.html">
+                        <i class="fas fa-th-large"></i> <span>Dashboard</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="admin-users.html" class="active">
+                        <i class="fas fa-user-friends"></i> <span>Data User</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="admin-services.html">
+                        <i class="fas fa-scissors"></i> <span>Services</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="admin-barbers.html">
+                        <i class="fas fa-users"></i> <span>Barbers</span>
+                    </a>
+                </li>
+                
+                <li class="menu-header">Account</li>
+                <li>
+                    <a href="#" onclick="logout()" class="menu-danger">
+                        <i class="fas fa-sign-out-alt"></i> <span>Logout</span>
+                    </a>
+                </li>
+            </ul>
+            
+            <div class="sidebar-footer"><p>&copy; 2026 BarberDyy</p></div>
+        </aside>
+
+        <main class="main-content">
+            
+            <header class="topbar">
+                <div class="topbar-left">
+                    <h1 class="page-title">Aktivitas Pengguna</h1>
+                    <p class="page-subtitle">Pantau pendaftaran dan login member.</p>
+                </div>
+                
+                <div class="topbar-right" style="display: flex; align-items: center; gap: 20px;">
+                    
+                    <div class="notification-wrapper" onclick="window.location.href='admin-dashboard.html#recent-orders-table'" style="position: relative; cursor: pointer;">
+                        <i class="fas fa-bell" style="font-size: 1.2rem; color: #fff;"></i>
+                        <span id="notif-badge" style="display: none; position: absolute; top: -5px; right: -5px; width: 10px; height: 10px; background: #e74c3c; border-radius: 50%; border: 2px solid #1a1a1a;"></span>
+                    </div>
+
+                    <div class="user-profile" onclick="toggleDropdown('profileDropdown')">
+                        <img src="https://ui-avatars.com/api/?name=Admin&background=0ea5e9&color=fff" alt="Admin">
+                        <div class="user-info">
+                            <span class="name user-name">Super Admin</span> <span class="role">Owner</span>
+                        </div>
+                        <i class="fas fa-chevron-down"></i>
+
+                        <div id="profileDropdown" class="dropdown-menu profile-menu">
+                            <div class="profile-header"><p>Halo, <strong class="user-name">Admin</strong></p></div>
+                            <a href="#" class="dropdown-link" onclick="openModal('profileModal')"><i class="fas fa-user-edit"></i> Edit Profile</a>
+                            <div class="divider"></div>
+                            <a href="#" onclick="logout()" class="dropdown-link text-danger"><i class="fas fa-sign-out-alt"></i> Keluar</a>
+                        </div>
+                    </div>
+                </div>
+            </header>
+
+            <div class="content-wrapper">
+                <div class="table-card">
+                    <div class="card-header">
+                        <h3>Daftar Member Terdaftar</h3>
+                    </div>
+                    
+                    <div class="table-responsive">
+                        <table class="custom-table">
+                            <thead>
+                                <tr>
+                                    <th>Info User</th>
+                                    <th>Kontak</th>
+                                    <th>Status Member</th>
+                                    <th>Terdaftar Pada</th>
+                                </tr>
+                            </thead>
+                            <tbody id="users-table-body">
+                                <tr><td colspan="4" class="text-center"><i class="fas fa-spinner fa-spin"></i> Memuat data...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <div id="profileModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Edit Profile Admin</h3>
+                <span class="close-modal" onclick="closeModal('profileModal')">&times;</span>
+            </div>
+            <form id="editProfileForm">
+                <div class="profile-upload-section">
+                    <img src="https://ui-avatars.com/api/?name=Admin&background=0ea5e9&color=fff" id="previewPhoto" class="profile-preview-lg">
+                    <div class="file-input-wrapper">
+                        <label for="profilePhotoInput" class="btn-secondary">Ganti Foto</label>
+                        <input type="file" id="profilePhotoInput" accept="image/*" onchange="previewImage(this)">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>Nama Lengkap</label>
+                    <input type="text" id="editName" class="form-input" placeholder="Nama Admin" required>
+                </div>
+                <div class="form-group">
+                    <label>Password Baru (Opsional)</label>
+                    <input type="password" id="editPassword" class="form-input" placeholder="Isi jika ingin ganti password">
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn-cancel" onclick="closeModal('profileModal')">Batal</button>
+                    <button type="submit" class="btn-save">Simpan Perubahan</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script src="../assets/js/utils.js"></script>
+    <script src="../assets/js/admin.js"></script>
+</body>
+</html>

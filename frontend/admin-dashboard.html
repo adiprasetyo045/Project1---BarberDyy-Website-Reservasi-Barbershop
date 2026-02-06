@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard | BarberDyy</title>
+    
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <link rel="stylesheet" href="../assets/css/admin.css">
+
+    <style>
+        /* TABS STYLE */
+        .tab-buttons { display: flex; gap: 10px; margin-bottom: 20px; border-bottom: 1px solid var(--border); padding-bottom: 10px; }
+        .tab-btn { background: none; border: none; padding: 10px 20px; color: var(--text-secondary); cursor: pointer; font-weight: 600; transition: 0.3s; border-radius: 8px; font-size: 0.9rem; }
+        .tab-btn.active { background: rgba(241, 196, 15, 0.1); color: #f1c40f; border: 1px solid rgba(241, 196, 15, 0.3); }
+        .tab-content { display: none; animation: fadeIn 0.3s ease; }
+        .tab-content.active { display: block; }
+        
+        /* BADGES */
+        .badge-pending { background: rgba(243, 156, 18, 0.2); color: #f39c12; padding: 4px 10px; border-radius: 50px; font-size: 0.75rem; font-weight: bold; border: 1px solid rgba(243, 156, 18, 0.3); }
+        .badge-confirmed { background: rgba(39, 174, 96, 0.2); color: #2ecc71; padding: 4px 10px; border-radius: 50px; font-size: 0.75rem; font-weight: bold; border: 1px solid rgba(39, 174, 96, 0.3); }
+        .badge-cancelled { background: rgba(231, 76, 60, 0.2); color: #e74c3c; padding: 4px 10px; border-radius: 50px; font-size: 0.75rem; font-weight: bold; border: 1px solid rgba(231, 76, 60, 0.3); }
+        .badge-completed { background: rgba(52, 152, 219, 0.2); color: #3498db; padding: 4px 10px; border-radius: 50px; font-size: 0.75rem; font-weight: bold; border: 1px solid rgba(52, 152, 219, 0.3); }
+
+        /* BUTTONS & IMAGES */
+        .btn-view-proof { 
+            background: transparent; border: 1px solid #3498db; color: #3498db; 
+            padding: 4px 8px; border-radius: 4px; cursor: pointer; font-size: 0.8rem; transition: 0.2s;
+        }
+        .btn-view-proof:hover { background: #3498db; color: #fff; }
+
+        .btn-action { width: 30px; height: 30px; border-radius: 6px; border: none; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; transition: 0.2s; margin-right: 5px; }
+        .btn-approve { background: rgba(39, 174, 96, 0.1); color: #2ecc71; border: 1px solid #2ecc71; }
+        .btn-approve:hover { background: #2ecc71; color: #fff; }
+        .btn-reject { background: rgba(231, 76, 60, 0.1); color: #e74c3c; border: 1px solid #e74c3c; }
+        .btn-reject:hover { background: #e74c3c; color: #fff; }
+
+        .proof-img { width: 40px; height: 40px; border-radius: 6px; object-fit: cover; cursor: pointer; transition: 0.2s; border: 1px solid #555; }
+        .proof-img:hover { transform: scale(3); z-index: 100; border-color: #f1c40f; box-shadow: 0 5px 15px rgba(0,0,0,0.5); }
+
+        /* Modal Image Preview */
+        .proof-modal { display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.9); justify-content: center; align-items: center; }
+        .proof-modal img { max-width: 90%; max-height: 90%; border-radius: 8px; box-shadow: 0 0 20px rgba(255,255,255,0.2); }
+        .proof-modal .close { position: absolute; top: 20px; right: 30px; color: #fff; font-size: 40px; cursor: pointer; }
+
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
+    </style>
+</head>
+<body>
+
+    <div id="proofModal" class="proof-modal" onclick="this.style.display='none'">
+        <span class="close">&times;</span>
+        <img id="proofImgDisplay" src="">
+    </div>
+
+    <div class="app-container">
+        
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <div class="logo"><span>Barber<span class="text-gold">Dyy</span></span></div>
+            </div>
+
+            <ul class="sidebar-menu">
+                <li class="menu-header">Main Menu</li>
+                <li><a href="admin-dashboard.html" class="active"><i class="fas fa-th-large"></i><span>Dashboard</span></a></li>
+                <li><a href="admin-users.html"><i class="fas fa-user-friends"></i><span>Data User</span></a></li>
+                <li><a href="admin-services.html"><i class="fas fa-scissors"></i><span>Services</span></a></li>
+                <li><a href="admin-barbers.html"><i class="fas fa-users"></i><span>Barbers</span></a></li>
+                
+                <li class="menu-header">Account</li>
+                <li><a href="#" onclick="logout()" class="menu-danger"><i class="fas fa-sign-out-alt"></i><span>Logout</span></a></li>
+            </ul>
+            
+            <div class="sidebar-footer"><p>&copy; 2026 BarberDyy</p></div>
+        </aside>
+
+        <main class="main-content">
+            
+            <header class="topbar">
+                <div class="topbar-left">
+                    <h1 class="page-title">Dashboard</h1>
+                    <p class="page-subtitle">Ringkasan aktivitas hari ini.</p>
+                </div>
+                
+                <div class="topbar-right" style="display: flex; align-items: center; gap: 20px;">
+                    
+                    <div class="notification-wrapper" onclick="window.location.href='#recent-orders-table'" style="position: relative; cursor: pointer;">
+                        <i class="fas fa-bell" style="font-size: 1.2rem; color: #fff;"></i>
+                        <span id="notif-badge" style="display: none; position: absolute; top: -5px; right: -5px; width: 10px; height: 10px; background: #e74c3c; border-radius: 50%; border: 2px solid #1a1a1a;"></span>
+                    </div>
+
+                    <div class="user-profile" onclick="toggleDropdown('profileDropdown')">
+                        <img src="https://ui-avatars.com/api/?name=Admin&background=0ea5e9&color=fff" alt="Admin">
+                        <div class="user-info">
+                            <span class="name user-name">Super Admin</span>
+                            <span class="role">Owner</span>
+                        </div>
+                        <i class="fas fa-chevron-down"></i>
+                        <div id="profileDropdown" class="dropdown-menu profile-menu">
+                            <div class="profile-header"><p>Halo, <strong class="user-name">Admin</strong></p></div>
+                            <a href="#" class="dropdown-link" onclick="openModal('profileModal')"><i class="fas fa-user-edit"></i> Edit Profile</a>
+                            <div class="divider"></div>
+                            <a href="#" onclick="logout()" class="dropdown-link text-danger"><i class="fas fa-sign-out-alt"></i> Keluar</a>
+                        </div>
+                    </div>
+                </div>
+            </header>
+
+            <div class="content-wrapper">
+                
+                <div class="stats-grid">
+                    <div class="stat-card card-blue">
+                        <div class="stat-icon"><i class="fas fa-receipt"></i></div>
+                        <div class="stat-details">
+                            <span class="stat-label">Total Pesanan</span>
+                            <h3 class="stat-value" id="val-total">0</h3>
+                        </div>
+                    </div>
+                    <div class="stat-card card-orange">
+                        <div class="stat-icon"><i class="fas fa-clock"></i></div>
+                        <div class="stat-details">
+                            <span class="stat-label">Menunggu Konfirmasi</span>
+                            <h3 class="stat-value" id="val-pending">0</h3>
+                        </div>
+                    </div>
+                    <div class="stat-card card-green">
+                        <div class="stat-icon"><i class="fas fa-calendar-check"></i></div>
+                        <div class="stat-details">
+                            <span class="stat-label">Jadwal Aktif</span>
+                            <h3 class="stat-value" id="val-active">0</h3>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="charts-grid">
+                    <div class="chart-card large">
+                        <div class="card-header">
+                            <div>
+                                <h3>Statistik Bulanan</h3>
+                                <p class="text-secondary small">Total booking per tanggal</p>
+                            </div>
+                        </div>
+                        <div class="chart-body">
+                            <canvas id="weeklyChart"></canvas>
+                        </div>
+                    </div>
+                    <div class="chart-card small">
+                        <div class="card-header"><h3>Status Pesanan</h3></div>
+                        <div class="chart-body">
+                            <canvas id="statusChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="table-card" style="margin-top: 30px;">
+                    <div class="card-header">
+                        <div class="tab-buttons">
+                            <button class="tab-btn active" onclick="switchTab('booking')"><i class="fas fa-list"></i> Data Booking</button>
+                            <button class="tab-btn" onclick="switchTab('membership')"><i class="fas fa-crown"></i> Verifikasi Membership</button>
+                        </div>
+                        <button class="btn-primary" onclick="refreshData()"><i class="fas fa-sync-alt"></i> Refresh</button>
+                    </div>
+                    
+                    <div id="tab-booking" class="tab-content active">
+                        <div class="table-responsive">
+                            <table class="custom-table">
+                                <thead>
+                                    <tr>
+                                        <th>Jadwal</th>
+                                        <th>Pelanggan</th>
+                                        <th>Layanan</th>
+                                        <th>Metode Bayar</th>
+                                        <th>Bukti</th>
+                                        <th>Status</th>
+                                        <th>Aksi</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="recent-orders-table">
+                                    <tr><td colspan="7" class="text-center"><i class="fas fa-spinner fa-spin"></i> Memuat data booking...</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <div id="tab-membership" class="tab-content">
+                        <div class="table-responsive">
+                            <table class="custom-table">
+                                <thead>
+                                    <tr>
+                                        <th>Tanggal</th>
+                                        <th>User</th>
+                                        <th>Bukti Transfer</th>
+                                        <th>Status</th>
+                                        <th>Aksi</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="membership-request-list">
+                                    <tr><td colspan="5" class="text-center"><i class="fas fa-spinner fa-spin"></i> Memuat data membership...</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </main>
+    </div>
+
+    <div id="profileModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Edit Profile Admin</h3>
+                <span class="close-modal" onclick="closeModal('profileModal')">&times;</span>
+            </div>
+            <form id="editProfileForm">
+                <div class="profile-upload-section">
+                    <img src="https://ui-avatars.com/api/?name=Admin&background=0ea5e9&color=fff" id="previewPhoto" class="profile-preview-lg">
+                    <div class="file-input-wrapper">
+                        <label for="profilePhotoInput" class="btn-secondary">Ganti Foto</label>
+                        <input type="file" id="profilePhotoInput" accept="image/*" onchange="previewImage(this)">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>Nama Lengkap</label>
+                    <input type="text" id="editName" class="form-input" placeholder="Nama Admin" required>
+                </div>
+                <div class="form-group">
+                    <label>Password Baru (Opsional)</label>
+                    <input type="password" id="editPassword" class="form-input" placeholder="Isi jika ingin ganti password">
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn-cancel" onclick="closeModal('profileModal')">Batal</button>
+                    <button type="submit" class="btn-save">Simpan Perubahan</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script src="../assets/js/utils.js"></script>
+    <script src="../assets/js/admin.js"></script>
+
+</body>
+</html>

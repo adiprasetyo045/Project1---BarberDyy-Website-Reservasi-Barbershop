@@ -1,4 +1,4 @@
-const API_BASE_URL = 'http://localhost:3000/api';
+const API_BASE_URL = 'https://project1-barber-dyy-website-reservasi-barbershop-l0xeswl4b.vercel.app/api';
 
 async function fetchAPI(endpoint, options = {}) {
     const token = localStorage.getItem('token');

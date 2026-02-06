@@ -132,7 +132,7 @@ npm run dev
 
 ```
 
-*Backend berjalan di: `http://localhost:3000*`
+*Backend berjalan di: `https://project1-barber-dyy-website-reservasi-barbershop-l0xeswl4b.vercel.app*`
 
 **Jalankan Frontend:**
 

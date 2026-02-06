@@ -1,4 +1,4 @@
-const API_URL = 'http://localhost:3000/api';
+const API_URL = 'https://project1-barber-dyy-website-reservasi-barbershop-l0xeswl4b.vercel.app/api';
 
 // ==========================================
 // 1. GLOBAL INITIALIZATION & ROUTING
@@ -64,7 +64,7 @@ function loadAdminHeader() {
             // 2. Update Foto Profil
             if (user.profile_pic) {
                 // Tambahkan timestamp agar tidak cache
-                const imgUrl = `http://localhost:3000/${user.profile_pic}?t=${new Date().getTime()}`;
+                const imgUrl = `https://project1-barber-dyy-website-reservasi-barbershop-l0xeswl4b.vercel.app/${user.profile_pic}?t=${new Date().getTime()}`;
                 
                 // Update ikon di header
                 document.querySelectorAll('.user-profile img').forEach(img => {
@@ -250,7 +250,7 @@ function renderBookingTable(bookings, tableBody) {
         if (b.payment_method === 'online') {
             payMethod = '<span style="color:#3498db; font-weight:bold"><i class="fas fa-university"></i> Transfer</span>';
             if (b.payment_proof) {
-                const imgUrl = `http://localhost:3000/${b.payment_proof}`;
+                const imgUrl = `https://project1-barber-dyy-website-reservasi-barbershop-l0xeswl4b.vercel.app/${b.payment_proof}`;
                 proofBtn = `<button class="btn-view-proof" onclick="showProof('${imgUrl}')"><i class="fas fa-eye"></i> Lihat</button>`;
             } else {
                 proofBtn = '<span class="text-danger small">No Proof</span>';
@@ -587,7 +587,7 @@ function setupGlobalEvents() {
 
             if (json.success && json.data.length > 0) {
                 tbody.innerHTML = json.data.map(u => {
-                    const imgPath = u.payment_proof ? `http://localhost:3000/${u.payment_proof}` : '#';
+                    const imgPath = u.payment_proof ? `https://project1-barber-dyy-website-reservasi-barbershop-l0xeswl4b.vercel.app/${u.payment_proof}` : '#';
                     return `
                         <tr>
                             <td>${new Date(u.updated_at).toLocaleDateString('id-ID')}</td>

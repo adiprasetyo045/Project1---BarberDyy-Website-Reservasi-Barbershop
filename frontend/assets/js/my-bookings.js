@@ -1,5 +1,5 @@
 // Konfigurasi URL API
-const API_URL = 'http://localhost:3000/api';
+const API_URL = 'https://project1-barber-dyy-website-reservasi-barbershop-l0xeswl4b.vercel.app/api';
 
 document.addEventListener('DOMContentLoaded', () => {
     // 1. CEK LOGIN (GUNAKAN localStorage)
@@ -34,7 +34,7 @@ function loadUserData() {
             const avatarEl = document.getElementById('navAvatar');
             if (avatarEl) {
                 if (user.profile_pic && !user.profile_pic.includes('default')) {
-                    const imgSrc = user.profile_pic.startsWith('http') ? user.profile_pic : `http://localhost:3000/${user.profile_pic}`;
+                    const imgSrc = user.profile_pic.startsWith('http') ? user.profile_pic : `https://project1-barber-dyy-website-reservasi-barbershop-l0xeswl4b.vercel.app/${user.profile_pic}`;
                     avatarEl.innerHTML = `<img src="${imgSrc}" style="width:100%; height:100%; object-fit:cover; border-radius: 50%;">`;
                 } else {
                     avatarEl.textContent = user.name.charAt(0).toUpperCase();

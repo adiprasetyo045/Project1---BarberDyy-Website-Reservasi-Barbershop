@@ -448,7 +448,7 @@
             }
             const user = JSON.parse(userStr);
             document.getElementById('navUserName').textContent = user.name.split(' ')[0];
-            const avatarUrl = user.profile_pic ? `http://localhost:3000/${user.profile_pic}` : null;
+            const avatarUrl = user.profile_pic ? `https://project1-barber-dyy-website-reservasi-barbershop-l0xeswl4b.vercel.app/${user.profile_pic}` : null;
             const initial = user.name.charAt(0).toUpperCase();
             const avatarEl = document.getElementById('navAvatar');
             if (avatarUrl) {

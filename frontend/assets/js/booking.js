@@ -1,7 +1,4 @@
-// ==========================================
-// 1. KONFIGURASI & STATE
-// ==========================================
-const API_URL = 'https://project1-barber-dyy-website-reservasi-barbershop-l0xeswl4b.vercel.app/api';
+const API_URL = '';
 
 // State Global untuk menyimpan pilihan user
 window.bookingData = {
@@ -242,7 +239,9 @@ async function loadServices() {
         if (json.data) {
             container.innerHTML = json.data.map(s => `
                 <div class="selection-card" onclick="window.selectService(this, ${s.id}, '${s.name}', ${s.price})">
-                    <div class="card-img-wrapper"><img src="${s.image ? 'https://project1-barber-dyy-website-reservasi-barbershop-l0xeswl4b.vercel.app/'+s.image : 'https://placehold.co/300'}" style="width:100%;height:100%;object-fit:cover;"></div>
+                    <div class="card-img-wrapper">
+                        <img src="${s.image ? s.image : 'assets/images/default-service.jpg'}" style="width:100%;height:100%;object-fit:cover;" alt="${s.name}">
+                    </div>
                     <div class="card-content">
                         <div class="card-title">${s.name}</div>
                         <div class="card-price">Rp ${parseInt(s.price).toLocaleString('id-ID')}</div>
@@ -262,7 +261,9 @@ async function loadBarbers() {
         if (json.data) {
             container.innerHTML = json.data.map(b => `
                 <div class="selection-card" onclick="window.selectBarber(this, ${b.id}, '${b.name}')">
-                    <div class="card-img-wrapper"><img src="${b.image ? 'https://project1-barber-dyy-website-reservasi-barbershop-l0xeswl4b.vercel.app/'+b.image : 'https://ui-avatars.com/api/?name='+b.name}" style="width:100%;height:100%;object-fit:cover;"></div>
+                    <div class="card-img-wrapper">
+                        <img src="${b.image ? b.image : 'https://ui-avatars.com/api/?name='+b.name}" style="width:100%;height:100%;object-fit:cover;" alt="${b.name}">
+                    </div>
                     <div class="card-content">
                         <div class="card-title">${b.name}</div>
                         <small>Barber Pro</small>

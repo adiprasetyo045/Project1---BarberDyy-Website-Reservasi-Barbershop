@@ -1,5 +1,4 @@
-const API_URL = 'https://project1-barber-dyy-website-reservasi-barbershop-l0xeswl4b.vercel.app/api';
-
+const API_URL = '';
 document.addEventListener('DOMContentLoaded', () => {
     const token = localStorage.getItem('token');
     const userStr = localStorage.getItem('user');
@@ -53,7 +52,7 @@ function loadUserData(user) {
         setText('dashboardUserPhone', user.phone || '-');
 
         if (user.profile_pic && !user.profile_pic.includes('default')) {
-            const imgHTML = `<img src="https://project1-barber-dyy-website-reservasi-barbershop-l0xeswl4b.vercel.app/${user.profile_pic}" style="width:100%; height:100%; object-fit:cover;">`;
+            const imgHTML = `<img src="https://project1-barber-dyy-website-reservasi-barbershop-l0xeswl4b.const API_URL = ''/${user.profile_pic}" style="width:100%; height:100%; object-fit:cover;">`;
             setHTML('navAvatar', imgHTML);
             setHTML('cardAvatar', imgHTML);
         } else {

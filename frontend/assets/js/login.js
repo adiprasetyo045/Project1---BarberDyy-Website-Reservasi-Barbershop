@@ -1,5 +1,4 @@
-const API_URL = 'https://project1-barber-dyy-website-reservasi-barbershop-l0xeswl4b.vercel.app/api';
-
+const API_URL = '';
 document.addEventListener('DOMContentLoaded', () => {
     // [PENTING] Hapus sesi lama saat membuka halaman login
     // Ini mencegah user "nyangkut" di akun lama saat kembali ke halaman ini

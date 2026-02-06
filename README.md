@@ -132,7 +132,7 @@ npm run dev
 
 ```
 
-*Backend berjalan di: `https://project1-barber-dyy-website-reservasi-barbershop-l0xeswl4b.vercel.app*`
+*Backend berjalan di: `https://project1-barber-dyy-website-reservasi-barbershop-l0xeswl4b.const API_URL = ''*`
 
 **Jalankan Frontend:**
 

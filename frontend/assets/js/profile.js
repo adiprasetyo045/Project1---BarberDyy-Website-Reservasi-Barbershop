@@ -1,5 +1,4 @@
-const API_URL = 'https://project1-barber-dyy-website-reservasi-barbershop-l0xeswl4b.const API_URL = ''/api';
-
+const API_URL = ''; //
 document.addEventListener('DOMContentLoaded', () => {
     checkAuth();
     loadProfileData();

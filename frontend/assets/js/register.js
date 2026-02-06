@@ -1,3 +1,4 @@
+const API_URL = ''; //
 document.addEventListener('DOMContentLoaded', () => {
     // 1. CEK LOGIN (PENTING: Pakai sessionStorage)
     // Jika user sudah login, jangan biarkan mereka daftar lagi. Lempar ke dashboard.

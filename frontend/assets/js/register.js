@@ -41,14 +41,14 @@ document.addEventListener('DOMContentLoaded', () => {
             };
 
             try {
-                // 5. Kirim ke Backend (Pakai standard fetch)
-                const res = await fetch(`${API_URL}/auth/register`, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify(formData)
-                });
+                // 👇 PERHATIKAN: Tambahkan '/api' sebelum '/auth'
+            const res = await fetch(`${API_URL}/api/auth/register`, { 
+            method: 'POST',
+            headers: {
+            'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(formData)
+            });
 
                 const data = await res.json();
 

@@ -1,41 +1,30 @@
-const API_URL = ''; //
+const API_URL = ''; // ✅ Kosong supaya otomatis mendeteksi server sendiri
+
 document.addEventListener('DOMContentLoaded', () => {
-    // 1. CEK LOGIN (PENTING: Pakai sessionStorage)
-    // Jika user sudah login, jangan biarkan mereka daftar lagi. Lempar ke dashboard.
-    const token = sessionStorage.getItem('token');
-    if (token) {
+    // 1. Cek Login (Kalau sudah login, usir ke dashboard)
+    // Kita cek 'token' di localStorage (sesuai login.js)
+    if (localStorage.getItem('token')) {
         window.location.href = 'dashboard.html';
         return;
     }
 
-    const registerForm = document.querySelector('form');
+    const registerForm = document.getElementById('registerForm');
 
     if (registerForm) {
         registerForm.addEventListener('submit', async (e) => {
-            e.preventDefault(); // Tahan biar halaman GAK reload
+            e.preventDefault(); // Tahan biar gak reload
 
-            // 2. Ambil data dari inputan
-            // Menggunakan querySelectorAll sesuai kode Kakak
-            const inputs = registerForm.querySelectorAll('input');
-            
-            // Pastikan urutan input di HTML Kakak sesuai:
-            // [0]=Nama, [1]=HP, [2]=Email, [3]=Password, [4]=Confirm
-            const name = inputs[0].value;       
-            const phone = inputs[1].value;      
-            const email = inputs[2].value;      
-            const password = inputs[3].value;   
-            const confirm = inputs[4].value;    
-            
-            const btnSubmit = registerForm.querySelector('button');
+            // 2. Ambil elemen input berdasarkan ID (Lebih Aman & Akurat)
+            const nameInput = document.getElementById('name');
+            const emailInput = document.getElementById('email');
+            const phoneInput = document.getElementById('phone');
+            const passwordInput = document.getElementById('password');
+            const confirmPasswordInput = document.getElementById('confirmPassword');
+            const btnSubmit = document.querySelector('button[type="submit"]');
 
             // 3. Validasi Sederhana
-            if (password !== confirm) {
+            if (passwordInput.value !== confirmPasswordInput.value) {
                 alert("❌ Password dan Konfirmasi Password tidak sama!");
-                return;
-            }
-
-            if (password.length < 6) {
-                alert("❌ Password minimal 6 karakter!");
                 return;
             }
 
@@ -44,28 +33,35 @@ document.addEventListener('DOMContentLoaded', () => {
             btnSubmit.innerHTML = 'Memproses...';
             btnSubmit.disabled = true;
 
+            const formData = {
+                name: nameInput.value,
+                email: emailInput.value,
+                phone: phoneInput.value,
+                password: passwordInput.value
+            };
+
             try {
-                // 5. Kirim ke Backend (Pakai fetchAPI dari utils.js)
-                const res = await fetchAPI('/auth/register', {
+                // 5. Kirim ke Backend (Pakai standard fetch)
+                const res = await fetch(`${API_URL}/auth/register`, {
                     method: 'POST',
-                    body: JSON.stringify({ 
-                        name, 
-                        email, 
-                        password, 
-                        phone 
-                    })
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(formData)
                 });
 
-                if (res.success) {
+                const data = await res.json();
+
+                if (res.ok) {
                     alert("✅ Registrasi Berhasil! Silakan Login.");
                     window.location.href = 'login.html';
                 } else {
-                    alert("❌ Gagal: " + (res.message || "Email mungkin sudah terdaftar"));
+                    throw new Error(data.message || "Gagal mendaftar");
                 }
 
             } catch (err) {
-                console.error(err);
-                alert("❌ Error: Gagal terhubung ke server");
+                console.error('Error Register:', err);
+                alert("❌ Error: " + err.message);
             } finally {
                 // Kembalikan tombol
                 btnSubmit.innerHTML = originalText;

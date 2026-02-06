@@ -1,4 +1,5 @@
-const API_URL = '';
+const API_URL = ''; // ✅ Link kosong agar otomatis mendeteksi server sendiri
+
 document.addEventListener('DOMContentLoaded', () => {
     const token = localStorage.getItem('token');
     const userStr = localStorage.getItem('user');
@@ -24,7 +25,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
 async function syncLatestUserData(token) {
     try {
-        const res = await fetch(`${API_URL}/users/profile`, { 
+        // 👇 PERBAIKAN: Tambahkan '/api' dan slash di depan
+        const res = await fetch(`${API_URL}/api/users/profile`, { 
             method: 'GET',
             headers: { 
                 'Authorization': `Bearer ${token}`,
@@ -51,8 +53,10 @@ function loadUserData(user) {
         setText('dashboardUserEmail', user.email);
         setText('dashboardUserPhone', user.phone || '-');
 
+        // 👇 PERBAIKAN: Membersihkan kode image src yang tadi berantakan
         if (user.profile_pic && !user.profile_pic.includes('default')) {
-            const imgHTML = `<img src="https://project1-barber-dyy-website-reservasi-barbershop-l0xeswl4b.const API_URL = ''/${user.profile_pic}" style="width:100%; height:100%; object-fit:cover;">`;
+            // Kita anggap path dari database sudah berisi 'uploads/...'
+            const imgHTML = `<img src="${API_URL}/${user.profile_pic}" style="width:100%; height:100%; object-fit:cover;">`;
             setHTML('navAvatar', imgHTML);
             setHTML('cardAvatar', imgHTML);
         } else {
@@ -200,7 +204,8 @@ async function processPayment() {
     formData.append('payment_proof', fileInput.files[0]);
 
     try {
-        const res = await fetch(`${API_URL}/auth/buy-membership`, {
+        // 👇 PERBAIKAN: Tambahkan '/api' di sini
+        const res = await fetch(`${API_URL}/api/auth/buy-membership`, {
             method: 'POST',
             headers: { 'Authorization': `Bearer ${token}` },
             body: formData
@@ -228,7 +233,8 @@ async function processPayment() {
 
 async function loadUserStats(token) {
     try {
-        const res = await fetch(`${API_URL}/bookings/my-bookings`, {
+        // 👇 PERBAIKAN: Tambahkan '/api' di sini
+        const res = await fetch(`${API_URL}/api/bookings/my-bookings`, {
             method: 'GET',
             headers: {
                 'Authorization': `Bearer ${token}`,

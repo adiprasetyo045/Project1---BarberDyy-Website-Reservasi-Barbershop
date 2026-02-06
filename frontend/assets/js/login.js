@@ -1,7 +1,7 @@
-const API_URL = '';
+const API_URL = ''; // ✅ Link kosong agar otomatis ke server sendiri
+
 document.addEventListener('DOMContentLoaded', () => {
     // [PENTING] Hapus sesi lama saat membuka halaman login
-    // Ini mencegah user "nyangkut" di akun lama saat kembali ke halaman ini
     localStorage.removeItem('token');
     localStorage.removeItem('user');
 
@@ -23,7 +23,8 @@ document.addEventListener('DOMContentLoaded', () => {
             btnSubmit.disabled = true;
 
             try {
-                const response = await fetch(`${API_URL}/auth/login`, {
+                // 👇 PERHATIKAN: Sudah ditambahkan '/api' di sini
+                const response = await fetch(`${API_URL}/api/auth/login`, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json'

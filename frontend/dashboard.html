@@ -8,11 +8,7 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     
-  
-    <link rel="stylesheet" href="assets/css/dashboard.css"> 
-    <link rel="stylesheet" href="assets/css/responsive.css">
-    
-
+    <link rel="stylesheet" href="assets/css/styles.css"> 
     </head>
 <body>
 
@@ -24,8 +20,9 @@
                 <a href="booking.html" class="nav-link">Booking</a>
                 <a href="my-bookings.html" class="nav-link">History</a>
             </div>
+            
             <div class="user-dropdown">
-                <div class="dropdown-toggle" onclick="toggleDropdown()">
+                <div class="dropdown-toggle" id="userDropdownToggle">
                     <div class="avatar-initials" id="navAvatar">U</div>
                     <span id="navUserName">User</span>
                     <i class="fas fa-chevron-down" style="font-size: 0.8rem;"></i>
@@ -78,7 +75,11 @@
 
             <div class="content-card member-card">
                 <span class="member-pill" id="memberBadgeStatus">NON MEMBER</span>
-                <div class="member-avatar" id="cardAvatar"><span class="avatar-text">U</span></div>
+                
+                <div class="member-avatar" id="cardAvatar">
+                    <span class="avatar-text">U</span>
+                </div>
+                
                 <h3 class="member-name" id="dashboardUserName">Loading...</h3>
                 <span class="member-email" id="dashboardUserEmail">loading@example.com</span>
                 
@@ -95,7 +96,7 @@
                     <div id="joinMemberArea" style="margin-top: 20px; display: none;">
                         <p style="font-size: 0.8rem; color: #aaa; margin-bottom: 15px;">Diskon 20% & Prioritas Booking!</p>
                         <button class="btn-primary" style="width: 100%; justify-content: center;" onclick="openPaymentModal()">
-                            Upgrade Member (Rp 50k)
+                            Upgrade Member Rp. 50.000
                         </button>
                     </div>
 
@@ -155,10 +156,28 @@
 
     <script src="assets/js/utils.js"></script>
     <script src="assets/js/dashboard.js"></script>
+    
     <script>
-        // Inline script untuk toggle dropdown & logout
-        function toggleDropdown() { const menu = document.getElementById('userMenu'); menu.style.display = (menu.style.display === 'block') ? 'none' : 'block'; }
-        window.onclick = function(event) { if (!event.target.closest('.user-dropdown')) { const menu = document.getElementById('userMenu'); if (menu) menu.style.display = 'none'; } }
+        document.addEventListener('DOMContentLoaded', () => {
+            const toggle = document.getElementById('userDropdownToggle');
+            const menu = document.getElementById('userMenu');
+            const dropdown = document.querySelector('.user-dropdown');
+
+            if (toggle && menu) {
+                // Klik tombol toggle
+                toggle.addEventListener('click', (e) => {
+                    e.stopPropagation(); // Mencegah event bubbling
+                    menu.style.display = (menu.style.display === 'block') ? 'none' : 'block';
+                });
+
+                // Klik di luar menu untuk menutup
+                window.addEventListener('click', (e) => {
+                    if (!dropdown.contains(e.target)) {
+                        menu.style.display = 'none';
+                    }
+                });
+            }
+        });
     </script>
 </body>
 </html>

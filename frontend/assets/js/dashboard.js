@@ -60,15 +60,30 @@ function loadUserData(user) {
         setText('dashboardUserEmail', user.email);
         setText('dashboardUserPhone', user.phone || '-');
 
+        // 👇 LOGIKA BARU: HANDLE GAMBAR HILANG DI VERCEL
+        const initial = user.name.charAt(0).toUpperCase();
+        
+        // Template Inisial (Dipakai kalau tidak ada foto atau foto rusak)
+        const initialHTML = `<span class="avatar-text" style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;background:#000;color:#f1c40f;font-weight:bold;font-size:1.2rem;border-radius:50%;border:2px solid #f1c40f;">${initial}</span>`;
+
         if (user.profile_pic && !user.profile_pic.includes('default')) {
-            // Bersihkan path image
-            const imgHTML = `<img src="${API_URL}/${user.profile_pic}" style="width:100%; height:100%; object-fit:cover;">`;
+            const imgUrl = `${API_URL}/${user.profile_pic}`;
+            
+            // Trik: Pasang 'onerror'. Kalau gambar gagal dimuat (karena dihapus Vercel),
+            // otomatis ganti elemennya jadi Inisial Nama.
+            const imgHTML = `
+                <img src="${imgUrl}" 
+                     style="width:100%; height:100%; object-fit:cover; border-radius:50%;" 
+                     onerror="this.parentElement.innerHTML='${initialHTML.replace(/"/g, "'")}'"
+                >
+            `;
+            
             setHTML('navAvatar', imgHTML);
             setHTML('cardAvatar', imgHTML);
         } else {
-            const initial = user.name.charAt(0).toUpperCase();
-            setText('navAvatar', initial);
-            setHTML('cardAvatar', `<span class="avatar-text">${initial}</span>`);
+            // Kalau memang tidak punya foto, langsung pakai inisial
+            setHTML('navAvatar', initialHTML);
+            setHTML('cardAvatar', initialHTML);
         }
 
         const status = (user.membership_status || 'inactive').toLowerCase();
@@ -260,11 +275,19 @@ async function loadUserStats(token) {
 
         if (json.success) {
             const bookings = json.data;
-            // ... (Animasi stats tetap sama) ...
-            animateValue("totalBookings", 0, bookings.length, 1000);
-            animateValue("activeBookings", 0, bookings.filter(b => ['pending','confirmed'].includes(b.status?.toLowerCase())).length, 1000);
-            animateValue("completedBookings", 0, bookings.filter(b => b.status?.toLowerCase() === 'completed').length, 1000);
-            
+            const total = bookings.length;
+            const upcoming = bookings.filter(b => {
+                const s = b.status ? b.status.toLowerCase() : '';
+                return s === 'pending' || s === 'confirmed';
+            }).length;
+            const completed = bookings.filter(b =>
+                b.status && b.status.toLowerCase() === 'completed'
+            ).length;
+
+            animateValue("totalBookings", 0, total, 1000);
+            animateValue("activeBookings", 0, upcoming, 1000);
+            animateValue("completedBookings", 0, completed, 1000);
+
             renderUpcomingBooking(bookings);
         }
     } catch (err) {
@@ -272,7 +295,6 @@ async function loadUserStats(token) {
     }
 }
 
-// ... (Sisa fungsi helper di bawah biarkan saja, tidak ada yang perlu diubah) ...
 function renderUpcomingBooking(bookings) {
     const container = document.getElementById('upcomingBookingsContainer');
     if (!container) return;
@@ -290,31 +312,51 @@ function renderUpcomingBooking(bookings) {
         const next = activeBookings[0];
         const dateObj = new Date(next.booking_date);
         const dateStr = dateObj.toLocaleDateString('id-ID', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
+
         let badgeStyle = "background: rgba(243, 156, 18, 0.2); color: #f39c12;";
-        if (next.status.toLowerCase() === 'confirmed') badgeStyle = "background: rgba(46, 204, 113, 0.2); color: #2ecc71;";
+        if (next.status.toLowerCase() === 'confirmed') {
+            badgeStyle = "background: rgba(46, 204, 113, 0.2); color: #2ecc71;";
+        }
+
+        const primaryColor = '#f1c40f';
 
         container.innerHTML = `
-            <div style="background: #252525; padding: 25px; border-radius: 12px; border-left: 5px solid #f1c40f; box-shadow: 0 4px 6px rgba(0,0,0,0.3);">
+            <div style="background: #252525; padding: 25px; border-radius: 12px; border-left: 5px solid ${primaryColor}; box-shadow: 0 4px 6px rgba(0,0,0,0.3);">
                 <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:15px; flex-wrap:wrap; gap:10px;">
                     <div>
                         <h4 style="color:#fff; margin:0 0 5px 0; font-size:1.3rem;">${next.service_name}</h4>
                         <p style="color:#aaa; font-size:0.9rem; margin:0;">
-                            <i class="fas fa-user-tie" style="color:#f1c40f; margin-right:5px;"></i> Barber: <strong>${next.barber_name}</strong>
+                            <i class="fas fa-user-tie" style="color:${primaryColor}; margin-right:5px;"></i> Barber: <strong>${next.barber_name}</strong>
                         </p>
                     </div>
-                    <span style="${badgeStyle} padding:5px 12px; border-radius:50px; font-weight:700; font-size:0.75rem; text-transform:uppercase;">${next.status}</span>
+                    <span style="${badgeStyle} padding:5px 12px; border-radius:50px; font-weight:700; font-size:0.75rem; text-transform:uppercase;">
+                        ${next.status}
+                    </span>
                 </div>
                 <div style="background:#2a2a2a; padding:15px; border-radius:8px; display:flex; gap:20px; align-items:center; color:#ddd; flex-wrap:wrap;">
-                    <div style="display:flex; align-items:center; gap:8px;"><i class="fas fa-calendar-alt" style="color:#f1c40f;"></i> ${dateStr}</div>
-                    <div style="display:flex; align-items:center; gap:8px;"><i class="fas fa-clock" style="color:#f1c40f;"></i> Jam ${next.booking_time}</div>
+                    <div style="display:flex; align-items:center; gap:8px;">
+                        <i class="fas fa-calendar-alt" style="color:${primaryColor};"></i> ${dateStr}
+                    </div>
+                    <div style="display:flex; align-items:center; gap:8px;">
+                        <i class="fas fa-clock" style="color:${primaryColor};"></i> Jam ${next.booking_time}
+                    </div>
                 </div>
-            </div>`;
+            </div>
+        `;
     } else {
-        container.innerHTML = `<div style="text-align:center; padding: 40px; border: 2px dashed #333; border-radius: 12px; color: #666;"><i class="fas fa-cut" style="font-size: 3rem; margin-bottom: 15px; opacity: 0.3;"></i><p style="margin-bottom:20px;">Belum ada jadwal cukur mendatang.</p><a href="booking.html" style="background:#f1c40f; color:#000; text-decoration:none; padding: 10px 20px; border-radius:5px; font-weight:bold; display:inline-block;">+ Booking Sekarang</a></div>`;
+        container.innerHTML = `
+            <div style="text-align:center; padding: 40px; border: 2px dashed #333; border-radius: 12px; color: #666;">
+                <i class="fas fa-cut" style="font-size: 3rem; margin-bottom: 15px; opacity: 0.3;"></i>
+                <p style="margin-bottom:20px;">Belum ada jadwal cukur mendatang.</p>
+                <a href="booking.html" style="background:${'#f1c40f'}; color:#000; text-decoration:none; padding: 10px 20px; border-radius:5px; font-weight:bold; display:inline-block;">+ Booking Sekarang</a>
+            </div>
+        `;
     }
 }
+
 function setText(id, text) { const el = document.getElementById(id); if (el) el.textContent = text; }
 function setHTML(id, html) { const el = document.getElementById(id); if (el) el.innerHTML = html; }
+
 function animateValue(id, start, end, duration) {
     const obj = document.getElementById(id);
     if (!obj) return;
@@ -327,6 +369,7 @@ function animateValue(id, start, end, duration) {
     };
     window.requestAnimationFrame(step);
 }
+
 function logout() {
     if (confirm("Yakin ingin keluar?")) {
         localStorage.clear();

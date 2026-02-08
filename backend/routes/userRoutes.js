@@ -3,11 +3,16 @@ const router = express.Router();
 const db = require('../config/database');
 const auth = require('../middleware/auth'); 
 
+// ==========================================================
+// 1. GET PROFILE (Rute Spesifik HARUS di atas rute root '/')
+// ==========================================================
+// Endpoint: GET /api/users/profile
 router.get('/profile', auth, async (req, res) => {
     try {
-        // Ambil ID dari token user yang sedang login (req.user.id)
+        // Ambil ID dari token user yang sedang login
         const userId = req.user.id;
 
+        // Query khusus untuk mengambil data 1 user saja
         const result = await db.query(`
             SELECT id, name, email, phone, role, created_at, 
             membership_status, membership_expiry, profile_pic
@@ -19,6 +24,7 @@ router.get('/profile', auth, async (req, res) => {
             return res.status(404).json({ success: false, message: "User tidak ditemukan" });
         }
 
+        // Kirim data user tersebut
         res.json({ success: true, data: result.rows[0] });
 
     } catch (err) {
@@ -27,10 +33,10 @@ router.get('/profile', auth, async (req, res) => {
     }
 });
 
-// =================================================
+// ==========================================================
 // 2. GET ALL USERS (Untuk Admin)
-// =================================================
-// Route: GET /api/users
+// ==========================================================
+// Endpoint: GET /api/users/
 router.get('/', auth, async (req, res) => {
     try {
         const result = await db.query(`

@@ -1,24 +1,18 @@
 const multer = require('multer');
 const path = require('path');
-const fs = require('fs');
-const os = require('os'); // Import OS untuk mendeteksi folder temporary sistem
+const os = require('os'); // ✅ Import OS untuk akses folder tmp sistem
 
 const storage = multer.diskStorage({
     destination: function (req, file, cb) {
-        // ✅ PENTING UNTUK VERCEL:
-        // Kita tidak boleh menulis di root folder project ('../uploads').
-        // Kita harus gunakan folder temporary sistem ('/tmp' di Linux/Vercel).
-        
-        let uploadPath = os.tmpdir(); // Otomatis mendeteksi folder /tmp
-
-        // (Opsional) Jika ingin merapikan, bisa buat subfolder di dalam /tmp
-        // Tapi untuk Vercel, simpan flat saja biar aman & tidak error permission.
-        
+        // ✅ PERBAIKAN VERCEL:
+        // Jangan simpan di folder project ('../uploads') karena Vercel Read-Only.
+        // Gunakan folder temporary sistem operasi ('/tmp').
+        const uploadPath = os.tmpdir();
         cb(null, uploadPath);
     },
     filename: function (req, file, cb) {
         const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
-        // Ganti spasi dengan strip biar link tidak putus
+        // Hapus spasi di nama file biar aman
         const cleanName = file.originalname.replace(/\s+/g, '-');
         const prefix = file.fieldname === 'payment_proof' ? 'transaksi' : 'profile';
         
@@ -40,7 +34,7 @@ const fileFilter = (req, file, cb) => {
 
 const upload = multer({ 
     storage: storage,
-    limits: { fileSize: 5 * 1024 * 1024 }, // Limit 5MB
+    limits: { fileSize: 5 * 1024 * 1024 }, // Maksimal 5MB
     fileFilter: fileFilter
 });
 

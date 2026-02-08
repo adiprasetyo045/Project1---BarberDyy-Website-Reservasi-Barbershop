@@ -1,52 +1,39 @@
-const API_URL = ''; // ✅ Link kosong
+const API_URL = '';
 
-console.log("🚀 VERSI BARU - SUDAH ADA API"); // Penanda kalau file ini sudah update
+console.log("🚀 VERSI BARU: REGISTER SUDAH PAKAI /api"); // Penanda Wajib
 
 document.addEventListener('DOMContentLoaded', () => {
-    if (localStorage.getItem('token')) {
-        window.location.href = 'dashboard.html';
-        return;
-    }
-
     const registerForm = document.getElementById('registerForm');
 
     if (registerForm) {
         registerForm.addEventListener('submit', async (e) => {
             e.preventDefault();
+            
+            const name = document.getElementById('name').value;
+            const email = document.getElementById('email').value;
+            const phone = document.getElementById('phone').value; // Pastikan ID di HTML adalah 'phone'
+            const password = document.getElementById('password').value;
+            const confirm = document.getElementById('confirmPassword').value;
+            const btn = registerForm.querySelector('button');
 
-            const nameInput = document.getElementById('name');
-            const emailInput = document.getElementById('email');
-            const phoneInput = document.getElementById('phone');
-            const passwordInput = document.getElementById('password');
-            const confirmPasswordInput = document.getElementById('confirmPassword');
-            const btnSubmit = document.querySelector('button[type="submit"]');
+            if (password !== confirm) return alert("❌ Password tidak sama!");
 
-            if (passwordInput.value !== confirmPasswordInput.value) {
-                alert("❌ Password tidak sama!");
-                return;
-            }
-
-            const originalText = btnSubmit.innerHTML;
-            btnSubmit.innerHTML = 'Memproses...';
-            btnSubmit.disabled = true;
+            const originalText = btn.innerHTML;
+            btn.innerHTML = 'Memproses...';
+            btn.disabled = true;
 
             try {
-                // 👇 PASTIKAN ADA /api DI SINI
-                const res = await fetch(`${API_URL}/api/auth/register`, { 
+                // 👇 PERHATIKAN: WAJIB ADA /api DI SINI
+                const res = await fetch(`${API_URL}/api/auth/register`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        name: nameInput.value,
-                        email: emailInput.value,
-                        phone: phoneInput.value,
-                        password: passwordInput.value
-                    })
+                    body: JSON.stringify({ name, email, phone, password })
                 });
 
                 const data = await res.json();
 
                 if (res.ok) {
-                    alert("✅ Registrasi Berhasil!");
+                    alert("✅ Registrasi Berhasil! Silakan login.");
                     window.location.href = 'login.html';
                 } else {
                     throw new Error(data.message || "Gagal mendaftar");
@@ -55,8 +42,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 console.error(err);
                 alert("❌ Error: " + err.message);
             } finally {
-                btnSubmit.innerHTML = originalText;
-                btnSubmit.disabled = false;
+                btn.innerHTML = originalText;
+                btn.disabled = false;
             }
         });
     }

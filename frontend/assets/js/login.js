@@ -1,61 +1,51 @@
-const API_URL = ''; // ✅ Link kosong agar otomatis ke server sendiri
+const API_URL = ''; 
+
+console.log("🚀 VERSI BARU: LOGIN SUDAH PAKAI /api"); // Penanda Wajib
 
 document.addEventListener('DOMContentLoaded', () => {
-    // [PENTING] Hapus sesi lama saat membuka halaman login
     localStorage.removeItem('token');
     localStorage.removeItem('user');
 
     const loginForm = document.getElementById('loginForm');
-    const emailInput = document.getElementById('email');
-    const passwordInput = document.getElementById('password');
 
     if (loginForm) {
         loginForm.addEventListener('submit', async (e) => {
             e.preventDefault();
-
-            const email = emailInput.value;
-            const password = passwordInput.value;
-            const btnSubmit = loginForm.querySelector('button');
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+            const btn = loginForm.querySelector('button');
             
-            // Simpan teks asli dan ubah status tombol jadi loading
-            const originalText = btnSubmit.innerHTML;
-            btnSubmit.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Memproses...';
-            btnSubmit.disabled = true;
+            const originalText = btn.innerHTML;
+            btn.innerHTML = 'Memproses...';
+            btn.disabled = true;
 
             try {
-                // 👇 PERHATIKAN: Sudah ditambahkan '/api' di sini
-                const response = await fetch(`${API_URL}/api/auth/login`, {
+                // 👇 PERHATIKAN: WAJIB ADA /api DI SINI
+                const res = await fetch(`${API_URL}/api/auth/login`, {
                     method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
+                    headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ email, password })
                 });
 
-                const res = await response.json();
+                const data = await res.json();
 
-                if (res.success) {
-                    // 1. Simpan Token & Data User
-                    localStorage.setItem('token', res.token);
-                    localStorage.setItem('user', JSON.stringify(res.user));
-
-                    alert(`Login Berhasil! Selamat datang, ${res.user.name}`);
-
-                    // 2. Redirect Berdasarkan Role
-                    if (res.user.role === 'admin') {
-                        window.location.href = 'admin-dashboard.html';
-                    } else {
-                        window.location.href = 'dashboard.html';
-                    }
+                if (res.ok && data.success) {
+                    localStorage.setItem('token', data.token);
+                    localStorage.setItem('user', JSON.stringify(data.user));
+                    
+                    alert("✅ Login Berhasil!");
+                    // Redirect sesuai role
+                    if(data.user.role === 'admin') window.location.href = 'admin-dashboard.html';
+                    else window.location.href = 'dashboard.html';
                 } else {
-                    alert(res.message || 'Login Gagal. Periksa email dan password Anda.');
+                    throw new Error(data.message || "Login gagal");
                 }
             } catch (err) {
-                console.error("Login Error:", err);
-                alert("Gagal terhubung ke server. Pastikan backend sudah menyala.");
+                console.error(err);
+                alert("❌ Error: " + err.message);
             } finally {
-                btnSubmit.innerHTML = originalText;
-                btnSubmit.disabled = false;
+                btn.innerHTML = originalText;
+                btn.disabled = false;
             }
         });
     }

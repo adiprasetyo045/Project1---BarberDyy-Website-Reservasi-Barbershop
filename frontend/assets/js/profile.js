@@ -1,4 +1,5 @@
-const API_URL = ''; //
+const API_URL = ''; // ✅ Link kosong agar otomatis ke server sendiri
+
 document.addEventListener('DOMContentLoaded', () => {
     checkAuth();
     loadProfileData();
@@ -16,20 +17,24 @@ function checkAuth() {
 
 // 2. LOAD DATA USER (Isi Form & Avatar)
 function loadProfileData() {
-    const userStr = localStorage.getItem('user');
-    const user = userStr ? JSON.parse(userStr) : {};
-    
-    // Isi Input Form
-    const nameInput = document.getElementById('name');
-    const emailInput = document.getElementById('email');
-    const phoneInput = document.getElementById('phone');
+    try {
+        const userStr = localStorage.getItem('user');
+        const user = userStr ? JSON.parse(userStr) : {};
+        
+        // Isi Input Form
+        const nameInput = document.getElementById('name');
+        const emailInput = document.getElementById('email');
+        const phoneInput = document.getElementById('phone');
 
-    if(nameInput) nameInput.value = user.name || '';
-    if(emailInput) emailInput.value = user.email || '';
-    if(phoneInput) phoneInput.value = user.phone || '';
-    
-    // Load Avatar
-    renderAvatar(user);
+        if(nameInput) nameInput.value = user.name || '';
+        if(emailInput) emailInput.value = user.email || '';
+        if(phoneInput) phoneInput.value = user.phone || '';
+        
+        // Load Avatar
+        renderAvatar(user);
+    } catch (e) {
+        console.error("Gagal load profile:", e);
+    }
 }
 
 // Helper: Tampilkan Avatar
@@ -37,9 +42,12 @@ function renderAvatar(user) {
     const container = document.getElementById('avatarContainer');
     const preview = document.getElementById('avatarPreview'); // ID image tag di HTML
 
-    // Jika user punya foto dan bukan null
+    // Jika user punya foto dan bukan null/default
     if (user.profile_pic && !user.profile_pic.includes('default')) {
-        const imgUrl = `https://project1-barber-dyy-website-reservasi-barbershop-l0xeswl4b.const API_URL = ''/${user.profile_pic}?t=${new Date().getTime()}`;
+        // 👇 PERBAIKAN: Membersihkan URL gambar
+        // Kita asumsikan path dari database sudah 'uploads/...' atau path relatif yang benar
+        // Tambahkan timestamp ?t=... agar browser tidak cache gambar lama
+        const imgUrl = `${API_URL}/${user.profile_pic}?t=${new Date().getTime()}`;
         
         if (preview) {
             preview.src = imgUrl; // Update src img yang sudah ada
@@ -48,7 +56,7 @@ function renderAvatar(user) {
             container.innerHTML = `<img src="${imgUrl}" class="avatar-preview" id="avatarPreview">`;
         }
     } else {
-        // Tampilkan Inisial
+        // Tampilkan Inisial jika tidak ada foto
         if (container) {
             const initial = (user.name || 'U').charAt(0).toUpperCase();
             container.innerHTML = `<span class="avatar-initial">${initial}</span>`;
@@ -82,6 +90,9 @@ function setupFormListener() {
             e.preventDefault();
             
             const btn = document.querySelector('.btn-save');
+            // Pastikan tombol ada sebelum diakses
+            if (!btn) return;
+
             const originalText = btn.innerHTML;
             btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Menyimpan...';
             btn.disabled = true;
@@ -93,7 +104,8 @@ function setupFormListener() {
                 const name = document.getElementById('name').value;
                 const phone = document.getElementById('phone').value;
                 const password = document.getElementById('password').value;
-                const file = document.getElementById('imageUpload').files[0];
+                const fileElement = document.getElementById('imageUpload');
+                const file = fileElement ? fileElement.files[0] : null;
 
                 formData.append('name', name);
                 formData.append('phone', phone);
@@ -102,8 +114,8 @@ function setupFormListener() {
 
                 const token = localStorage.getItem('token');
 
-                // Fetch ke Endpoint PUT /update-profile
-                const res = await fetch(`${API_URL}/auth/update-profile`, {
+                // 👇 PERBAIKAN: Tambahkan '/api' di sini
+                const res = await fetch(`${API_URL}/api/auth/update-profile`, {
                     method: 'PUT',
                     headers: { 
                         'Authorization': `Bearer ${token}` 
@@ -116,15 +128,22 @@ function setupFormListener() {
 
                 if (json.success) {
                     // Update LocalStorage dengan data user terbaru
-                    localStorage.setItem('user', JSON.stringify(json.user));
+                    // Pastikan json.user atau json.data sesuai respon backend
+                    const userData = json.user || json.data; 
+                    if (userData) {
+                        localStorage.setItem('user', JSON.stringify(userData));
+                    }
                     
                     alert("✅ Profil berhasil diperbarui!");
                     
                     // Reset field password & reload tampilan
-                    document.getElementById('password').value = '';
+                    const passInput = document.getElementById('password');
+                    if(passInput) passInput.value = '';
+                    
                     loadProfileData(); 
+                    window.location.reload(); // Reload halaman agar avatar di navbar juga berubah
                 } else {
-                    alert("Gagal: " + json.message);
+                    alert("Gagal: " + (json.message || "Terjadi kesalahan"));
                 }
 
             } catch (err) {

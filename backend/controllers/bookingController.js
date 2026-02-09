@@ -19,7 +19,6 @@ exports.getAllBookings = async (req, res) => {
         `);
         res.json({ success: true, data: result.rows });
     } catch (err) {
-        console.error(err);
         res.status(500).json({ success: false, message: 'Server Error' });
     }
 };
@@ -40,7 +39,6 @@ exports.updateBookingStatus = async (req, res) => {
         
         res.json({ success: true, message: 'Status berhasil diperbarui', data: result.rows[0] });
     } catch (err) {
-        console.error(err);
         res.status(500).json({ success: false, message: 'Gagal update status' });
     }
 };
@@ -51,7 +49,6 @@ exports.getNotificationCount = async (req, res) => {
         const count = parseInt(result.rows[0].count);
         res.json({ success: true, count });
     } catch (err) {
-        console.error(err);
         res.status(500).json({ success: false, count: 0 });
     }
 };
@@ -61,7 +58,7 @@ exports.createBooking = async (req, res) => {
         const { service_id, barber_id, booking_date, booking_time, notes, payment_method, payment_provider, payment_account } = req.body;
         const user_id = req.user.id; 
         
-        const payment_proof = req.file ? `uploads/transaksi/${req.file.filename}` : null;
+        const payment_proof = req.file ? req.file.path : null;
 
         if (!service_id || !barber_id || !booking_date || !booking_time) {
             return res.status(400).json({ success: false, message: 'Data booking utama tidak lengkap.' });
@@ -105,7 +102,6 @@ exports.createBooking = async (req, res) => {
         res.status(201).json({ success: true, message: 'Booking Berhasil!', data: newBooking.rows[0] });
 
     } catch (err) {
-        console.error(err);
         res.status(500).json({ success: false, message: 'Server Error' });
     }
 };

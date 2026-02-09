@@ -38,8 +38,14 @@ function renderAvatar(user) {
     const preview = document.getElementById('avatarPreview');
 
     if (user.profile_pic && !user.profile_pic.includes('default')) {
-        const imgUrl = `${API_URL}/${user.profile_pic}?t=${new Date().getTime()}`;
+        let imgUrl = user.profile_pic;
         
+        if (!imgUrl.startsWith('http')) {
+            imgUrl = `${API_URL}/${imgUrl}`;
+        }
+        
+        imgUrl += `?t=${new Date().getTime()}`;
+
         if (preview) {
             preview.src = imgUrl;
         } else if (container) {

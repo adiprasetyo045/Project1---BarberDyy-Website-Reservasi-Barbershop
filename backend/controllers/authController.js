@@ -26,7 +26,6 @@ exports.register = async (req, res) => {
             success: true, message: 'Registrasi berhasil', token, user 
         });
     } catch (error) {
-        console.error('Register Error:', error);
         res.status(500).json({ success: false, message: 'Gagal mendaftar.' });
     }
 };
@@ -57,7 +56,6 @@ exports.login = async (req, res) => {
         const { password: _, ...userData } = user;
         res.json({ success: true, message: 'Login berhasil', token, user: userData });
     } catch (error) {
-        console.error('Login Error:', error);
         res.status(500).json({ success: false, message: 'Terjadi kesalahan server' });
     }
 };
@@ -65,7 +63,6 @@ exports.login = async (req, res) => {
 exports.updateProfile = async (req, res) => {
     try {
         const userId = req.user.id;
-        // Ambil data dari form-data
         const { name, phone, password } = req.body;
         
         let query = 'UPDATE users SET updated_at = NOW()';
@@ -90,18 +87,9 @@ exports.updateProfile = async (req, res) => {
             paramIndex++;
         }
         
-        // Cek Upload Gambar
         if (req.file) {
-            // Simpan nama file saja, path lengkap disusun di frontend atau helper
-            // Contoh: 'profile-12345.jpg'
-            // Frontend nanti akses: API_URL + '/uploads/profiles/' + profile_pic
-            // (Tergantung setup folder static di index.js)
-            
-            // Opsi 1: Simpan path relatif (lebih aman buat pemula)
-            const filePath = `uploads/profiles/${req.file.filename}`; // Sesuai folder destination upload.js
-            
             query += `, profile_pic = $${paramIndex}`;
-            params.push(req.file.filename); // Simpan nama file saja biar fleksibel
+            params.push(req.file.path);
             paramIndex++;
         }
 
@@ -117,7 +105,6 @@ exports.updateProfile = async (req, res) => {
         res.json({ success: true, message: 'Profil berhasil diperbarui!', user: result.rows[0] });
 
     } catch (err) {
-        console.error("Update Profile Error:", err);
         res.status(500).json({ success: false, message: 'Gagal update profil.' });
     }
 };
@@ -127,7 +114,7 @@ exports.buyMembership = async (req, res) => {
         const userId = req.user.id;
         if (!req.file) return res.status(400).json({ success: false, message: 'Wajib upload bukti pembayaran!' });
 
-        const proofImage = req.file.filename; 
+        const proofImage = req.file.path; 
 
         const query = `
             UPDATE users 
@@ -138,7 +125,6 @@ exports.buyMembership = async (req, res) => {
         const result = await db.query(query, [proofImage, userId]);
         const updatedUser = result.rows[0];
 
-        // Email ke User
         const userSubject = '⏳ Bukti Pembayaran Diterima';
         const userContent = `
             <h3>Halo ${updatedUser.name},</h3>
@@ -147,10 +133,8 @@ exports.buyMembership = async (req, res) => {
                 Status: <b>MENUNGGU VERIFIKASI ADMIN</b>
             </div>
         `;
-        // Fire & Forget Email (biar response cepat)
         sendEmail(updatedUser.email, userSubject, createTemplate(userSubject, userContent)).catch(err => console.error("Email User Error", err));
 
-        // Email ke Admin
         const adminEmail = process.env.SMTP_USER;
         if (adminEmail) {
             const adminSubject = '🔔 ALERT: Pengajuan Membership Baru!';
@@ -170,7 +154,6 @@ exports.buyMembership = async (req, res) => {
         });
 
     } catch (error) {
-        console.error('Membership Error:', error);
         res.status(500).json({ success: false, message: 'Gagal memproses data.' });
     }
 };
@@ -180,7 +163,6 @@ exports.getPendingMemberships = async (req, res) => {
         const result = await db.query("SELECT id, name, email, payment_proof, updated_at FROM users WHERE membership_status = 'pending' ORDER BY updated_at DESC");
         res.json({ success: true, data: result.rows });
     } catch (error) {
-        console.error('Get Pending Error:', error);
         res.status(500).json({ success: false, message: 'Gagal mengambil data.' });
     }
 };
@@ -230,7 +212,6 @@ exports.verifyMembership = async (req, res) => {
         }
 
     } catch (error) {
-        console.error('Verifikasi Error:', error);
         res.status(500).json({ success: false, message: 'Gagal verifikasi.' });
     }
 };
@@ -246,7 +227,6 @@ exports.getAllUsers = async (req, res) => {
         const result = await db.query(query);
         res.json({ success: true, data: result.rows });
     } catch (error) {
-        console.error('Get Users Error:', error);
         res.status(500).json({ success: false, message: 'Gagal mengambil data user.' });
     }
 };

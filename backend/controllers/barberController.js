@@ -5,7 +5,6 @@ exports.getAllBarbers = async (req, res) => {
         const result = await db.query('SELECT * FROM barbers ORDER BY id DESC');
         res.json({ success: true, data: result.rows });
     } catch (error) {
-        console.error('Get Barbers Error:', error);
         res.status(500).json({ success: false, message: 'Gagal mengambil data barber.' });
     }
 };
@@ -13,18 +12,19 @@ exports.getAllBarbers = async (req, res) => {
 exports.createBarber = async (req, res) => {
     try {
         const { name, specialization, experience } = req.body;
+        const image = req.file ? req.file.path : null;
 
         if (!name || !specialization) {
             return res.status(400).json({ success: false, message: 'Nama dan Spesialisasi wajib diisi!' });
         }
 
         const query = `
-            INSERT INTO barbers (name, specialization, experience) 
-            VALUES ($1, $2, $3) 
+            INSERT INTO barbers (name, specialization, experience, image) 
+            VALUES ($1, $2, $3, $4) 
             RETURNING *
         `;
         
-        const result = await db.query(query, [name, specialization, experience || 0]);
+        const result = await db.query(query, [name, specialization, experience || 0, image]);
 
         res.status(201).json({
             success: true,
@@ -33,7 +33,6 @@ exports.createBarber = async (req, res) => {
         });
 
     } catch (error) {
-        console.error('Create Barber Error:', error);
         res.status(500).json({ success: false, message: 'Gagal menambah barber.' });
     }
 };
@@ -51,7 +50,6 @@ exports.deleteBarber = async (req, res) => {
         res.json({ success: true, message: 'Barber berhasil dihapus.' });
 
     } catch (error) {
-        console.error('Delete Barber Error:', error);
         res.status(500).json({ success: false, message: 'Gagal menghapus barber.' });
     }
 };

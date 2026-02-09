@@ -10,7 +10,8 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "cloudinary": "^1.41.3",
+    "multer-storage-cloudinary": "^4.0.0",
     "serve": "^14.2.1"
-  },
-  "devDependencies": {}
+  }
 }

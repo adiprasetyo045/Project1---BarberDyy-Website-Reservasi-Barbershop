@@ -1,10 +1,6 @@
-const API_URL = ''; // ✅ Link kosong agar otomatis ke server sendiri
-
-// 👇 PENANDA UPDATE (WAJIB MUNCUL DI CONSOLE)
-console.log("🚀 DASHBOARD.JS: VERSI FINAL - SUDAH PAKAI /api");
+const API_URL = '';
 
 document.addEventListener('DOMContentLoaded', () => {
-    // 1. Cek Login
     const token = localStorage.getItem('token');
     const userStr = localStorage.getItem('user');
 
@@ -16,14 +12,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const localUser = JSON.parse(userStr);
 
-    // 2. Load Data Awal
     loadUserData(localUser);
     loadUserStats(token);
     
-    // 3. Ambil Data Terbaru dari Server
     syncLatestUserData(token); 
 
-    // 4. Setup Tombol Join Member
     const btnJoin = document.getElementById('btnJoinMember');
     if (btnJoin) {
         btnJoin.onclick = openPaymentModal;
@@ -32,7 +25,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
 async function syncLatestUserData(token) {
     try {
-        // 👇 URL SUDAH BENAR: /api/users/profile
         const res = await fetch(`${API_URL}/api/users/profile`, { 
             method: 'GET',
             headers: { 
@@ -49,7 +41,7 @@ async function syncLatestUserData(token) {
             }
         }
     } catch (e) {
-        console.error("Gagal sinkronisasi user:", e);
+        console.error(e);
     }
 }
 
@@ -60,17 +52,17 @@ function loadUserData(user) {
         setText('dashboardUserEmail', user.email);
         setText('dashboardUserPhone', user.phone || '-');
 
-        // 👇 LOGIKA BARU: HANDLE GAMBAR HILANG DI VERCEL
         const initial = user.name.charAt(0).toUpperCase();
         
-        // Template Inisial (Dipakai kalau tidak ada foto atau foto rusak)
         const initialHTML = `<span class="avatar-text" style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;background:#000;color:#f1c40f;font-weight:bold;font-size:1.2rem;border-radius:50%;border:2px solid #f1c40f;">${initial}</span>`;
 
         if (user.profile_pic && !user.profile_pic.includes('default')) {
-            const imgUrl = `${API_URL}/${user.profile_pic}`;
+            let imgUrl = user.profile_pic;
             
-            // Trik: Pasang 'onerror'. Kalau gambar gagal dimuat (karena dihapus Vercel),
-            // otomatis ganti elemennya jadi Inisial Nama.
+            if (!imgUrl.startsWith('http')) {
+                imgUrl = `${API_URL}/${imgUrl}`;
+            }
+            
             const imgHTML = `
                 <img src="${imgUrl}" 
                      style="width:100%; height:100%; object-fit:cover; border-radius:50%;" 
@@ -81,7 +73,6 @@ function loadUserData(user) {
             setHTML('navAvatar', imgHTML);
             setHTML('cardAvatar', imgHTML);
         } else {
-            // Kalau memang tidak punya foto, langsung pakai inisial
             setHTML('navAvatar', initialHTML);
             setHTML('cardAvatar', initialHTML);
         }
@@ -170,7 +161,7 @@ function loadUserData(user) {
         }
 
     } catch (e) {
-        console.error("Gagal memuat data user:", e);
+        console.error(e);
     }
 }
 
@@ -224,7 +215,6 @@ async function processPayment() {
     formData.append('payment_proof', fileInput.files[0]);
 
     try {
-        // 👇 URL SUDAH BENAR: /api/auth/buy-membership
         const res = await fetch(`${API_URL}/api/auth/buy-membership`, {
             method: 'POST',
             headers: { 'Authorization': `Bearer ${token}` },
@@ -253,7 +243,6 @@ async function processPayment() {
 
 async function loadUserStats(token) {
     try {
-        // 👇 URL SUDAH BENAR: /api/bookings/my-bookings
         const res = await fetch(`${API_URL}/api/bookings/my-bookings`, {
             method: 'GET',
             headers: {
@@ -291,7 +280,7 @@ async function loadUserStats(token) {
             renderUpcomingBooking(bookings);
         }
     } catch (err) {
-        console.error("❌ Gagal load stats:", err);
+        console.error(err);
     }
 }
 

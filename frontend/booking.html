@@ -13,7 +13,7 @@
     <link rel="stylesheet" href="assets/css/responsive.css">
 
     <style>
-        /* --- STYLE KHUSUS BOOKING (Tambahan di luar styles.css) --- */
+        /* --- STYLE KHUSUS BOOKING --- */
 
         /* WIZARD STEPS */
         .booking-steps {
@@ -238,16 +238,18 @@
             </div>
 
             <div class="user-dropdown">
-                <div class="dropdown-toggle" onclick="toggleDropdown()">
-                    <div class="avatar-initials" id="navAvatar">U</div>
-                    <span id="navUserName">User</span>
-                    <i class="fas fa-chevron-down"></i>
+                <div class="dropdown-toggle" onclick="document.getElementById('userMenu').style.display = document.getElementById('userMenu').style.display === 'block' ? 'none' : 'block'">
+                    <div class="user-profile" style="display:flex; align-items:center; gap:10px;">
+                        <div class="avatar avatar-initial" style="width:35px; height:35px; border-radius:50%; background:#f1c40f; color:#000; display:flex; align-items:center; justify-content:center; font-weight:bold;">U</div>
+                        <span style="color:#fff;">User</span>
+                        <i class="fas fa-chevron-down" style="color:#aaa; font-size:0.8rem;"></i>
+                    </div>
                 </div>
                 <div class="dropdown-menu" id="userMenu">
                     <a href="profile.html" class="dropdown-item">
                         <i class="fas fa-user-cog"></i> Edit Profile
                     </a>
-                    <div class="dropdown-item text-danger" onclick="logout()">
+                    <div class="dropdown-item text-danger" onclick="if(confirm('Yakin ingin keluar?')){localStorage.clear();window.location.href='login.html';}">
                         <i class="fas fa-sign-out-alt"></i> Logout
                     </div>
                 </div>
@@ -258,19 +260,19 @@
     <div class="container dashboard">
         
         <div class="booking-steps">
-            <div class="step active" id="stepIndicator1">
+            <div class="step active" id="step1">
                 <div class="step-number">1</div>
                 <div class="step-label">Service</div>
             </div>
-            <div class="step" id="stepIndicator2">
+            <div class="step" id="step2">
                 <div class="step-number">2</div>
                 <div class="step-label">Barber</div>
             </div>
-            <div class="step" id="stepIndicator3">
+            <div class="step" id="step3">
                 <div class="step-number">3</div>
                 <div class="step-label">Time</div>
             </div>
-            <div class="step" id="stepIndicator4">
+            <div class="step" id="step4">
                 <div class="step-number">4</div>
                 <div class="step-label">Confirm</div>
             </div>
@@ -435,61 +437,7 @@
         </div>
     </div>
 
+    <script src="assets/js/utils.js"></script>
     <script src="assets/js/booking.js"></script>
-    <script>
-        // LOGIC USER & NAVBAR (DENGAN PERBAIKAN URL GAMBAR)
-        const API_URL = ''; // Gunakan Relative Path
-
-        document.addEventListener('DOMContentLoaded', () => {
-            const token = localStorage.getItem('token');
-            const userStr = localStorage.getItem('user');
-            if (!token || !userStr) {
-                alert("Silakan login terlebih dahulu.");
-                window.location.href = 'login.html';
-                return;
-            }
-            const user = JSON.parse(userStr);
-            document.getElementById('navUserName').textContent = user.name.split(' ')[0];
-            
-            // 👇 PERBAIKAN: Gunakan API_URL yang benar
-            let avatarUrl = null;
-            if (user.profile_pic && !user.profile_pic.includes('default')) {
-                avatarUrl = `${API_URL}/${user.profile_pic}`;
-            }
-
-            const initial = user.name.charAt(0).toUpperCase();
-            const avatarEl = document.getElementById('navAvatar');
-            
-            if (avatarUrl) {
-                // Tambahkan onError handler agar kalau gambar rusak, balik ke inisial
-                avatarEl.innerHTML = `<img src="${avatarUrl}" alt="Profile" style="width:100%;height:100%;object-fit:cover;" onerror="this.parentElement.textContent='${initial}'">`;
-            } else {
-                avatarEl.textContent = initial;
-            }
-        });
-
-        // Dropdown Logic
-        function toggleDropdown() { 
-            const menu = document.getElementById('userMenu');
-            menu.style.display = (menu.style.display === 'block') ? 'none' : 'block'; 
-        }
-        window.onclick = function(event) { 
-            if (!event.target.closest('.user-dropdown')) {
-                const menu = document.getElementById('userMenu');
-                if (menu) menu.style.display = 'none';
-            }
-        }
-        function logout() { 
-            if(confirm("Yakin ingin keluar?")) { 
-                localStorage.clear(); 
-                window.location.href = 'login.html'; 
-            } 
-        }
-
-        // Script tambahan untuk memastikan fungsi window tersedia (fallback)
-        if (typeof window.switchTab !== 'function') {
-            console.error("Fungsi switchTab belum dimuat! Pastikan booking.js sudah benar.");
-        }
-    </script>
 </body>
 </html>

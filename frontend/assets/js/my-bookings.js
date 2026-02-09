@@ -1,39 +1,32 @@
-const API_URL = ''; //
+const API_URL = ''; 
+
 document.addEventListener('DOMContentLoaded', () => {
-    // 1. CEK LOGIN (GUNAKAN localStorage)
     const token = localStorage.getItem('token');
     
-    // Jika token tidak ada, tendang ke login
     if (!token) {
         alert("Sesi habis. Silakan login kembali.");
         window.location.href = 'login.html';
         return;
     }
 
-    // 2. LOAD DATA USER (Avatar & Nama)
     loadUserData();
-
-    // 3. LOAD DATA TABLE
     loadBookingHistory(token);
 });
 
-// --- FUNGSI 1: LOAD USER DATA ---
 function loadUserData() {
     const userStr = localStorage.getItem('user');
     if (userStr) {
         try {
             const user = JSON.parse(userStr);
             
-            // Update Nama
             const nameEl = document.getElementById('navUserName'); 
             if (nameEl) nameEl.textContent = user.name.split(' ')[0];
 
-            // Update Avatar
             const avatarEl = document.getElementById('navAvatar');
             if (avatarEl) {
                 if (user.profile_pic && !user.profile_pic.includes('default')) {
-                    const imgSrc = user.profile_pic.startsWith('http') ? user.profile_pic : `https://project1-barber-dyy-website-reservasi-barbershop-l0xeswl4b.const API_URL = ''/${user.profile_pic}`;
-                    avatarEl.innerHTML = `<img src="${imgSrc}" style="width:100%; height:100%; object-fit:cover; border-radius: 50%;">`;
+                    const imgSrc = `${API_URL}/${user.profile_pic}`;
+                    avatarEl.innerHTML = `<img src="${imgSrc}" style="width:100%; height:100%; object-fit:cover; border-radius: 50%;" onerror="this.parentElement.innerHTML='${user.name.charAt(0).toUpperCase()}'">`;
                 } else {
                     avatarEl.textContent = user.name.charAt(0).toUpperCase();
                 }
@@ -44,11 +37,9 @@ function loadUserData() {
     }
 }
 
-// --- FUNGSI 2: AMBIL DATA HISTORY ---
 function loadBookingHistory(token) {
     const tableBody = document.getElementById('bookingsTableBody');
 
-    // Show loading state initially (Adjusted colspan to 7)
     tableBody.innerHTML = `
         <tr>
             <td colspan="7" style="text-align:center; padding: 50px; color: #666;">
@@ -58,7 +49,7 @@ function loadBookingHistory(token) {
         </tr>
     `;
 
-    fetch(`${API_URL}/bookings/my-bookings`, { 
+    fetch(`${API_URL}/api/bookings/my-bookings`, { 
         headers: {
             'Authorization': `Bearer ${token}`
         }
@@ -79,20 +70,16 @@ function loadBookingHistory(token) {
         if (response.success && response.data.length > 0) {
             tableBody.innerHTML = ''; 
             
-            // Urutkan dari yang terbaru (berdasarkan ID descending)
             const sortedData = response.data.sort((a, b) => b.id - a.id);
 
             sortedData.forEach(booking => {
-                // A. Format Tanggal (Indonesia)
                 const dateObj = new Date(booking.booking_date);
                 const formattedDate = dateObj.toLocaleDateString('id-ID', { 
                     weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' 
                 });
                 
-                // B. Format Jam
-                const formattedTime = booking.booking_time ? booking.booking_time.slice(0, 5) : '-';
+                const formattedTime = booking.start_time ? booking.start_time.slice(0, 5) : (booking.booking_time ? booking.booking_time.slice(0, 5) : '-');
 
-                // C. Tentukan Class Badge Status
                 let badgeClass = 'badge-pending'; 
                 const status = booking.status ? booking.status.toLowerCase() : 'pending';
 
@@ -100,12 +87,10 @@ function loadBookingHistory(token) {
                 else if (status === 'completed') badgeClass = 'badge-completed';
                 else if (status === 'canceled' || status === 'cancelled') badgeClass = 'badge-cancelled';
 
-                // D. Format Harga
                 let rawPrice = booking.total_price || booking.price || 0;
                 if (!rawPrice && booking.service_price) rawPrice = booking.service_price;
                 let formattedPrice = "Rp " + parseInt(rawPrice).toLocaleString('id-ID');
 
-                // E. Badge Pembayaran (NEW)
                 let paymentBadge = '';
                 if(booking.payment_method === 'online') {
                     paymentBadge = `<span style="color:#3b82f6; font-weight:600; font-size:0.85rem;"><i class="fas fa-university"></i> Transfer</span>`;
@@ -113,17 +98,15 @@ function loadBookingHistory(token) {
                     paymentBadge = `<span style="color:#94a3b8; font-size:0.85rem;"><i class="fas fa-money-bill"></i> Cash</span>`;
                 }
 
-                // F. Tombol Aksi (Hanya muncul jika Pending)
                 let actionBtn = '';
                 if(status === 'pending') {
                     actionBtn = `
-                        <button class="btn-cancel-booking" onclick="cancelBooking(${booking.id})">
+                        <button class="btn-cancel-booking" onclick="window.cancelBooking(${booking.id})">
                             <i class="fas fa-times"></i> Batal
                         </button>
                     `;
                 }
 
-                // G. Render Baris Tabel (KOLOM SESUAI HTML HEADER)
                 const row = `
                     <tr>
                         <td>
@@ -149,7 +132,6 @@ function loadBookingHistory(token) {
                 tableBody.innerHTML += row;
             });
         } else {
-            // Tampilan Jika Kosong (Adjusted colspan to 7)
             tableBody.innerHTML = `
                 <tr>
                     <td colspan="7" style="text-align:center; padding:60px 20px; color:#666;">
@@ -164,7 +146,6 @@ function loadBookingHistory(token) {
     })
     .catch(err => {
         console.error("Error fetching booking history:", err);
-        // Adjusted colspan to 7
         tableBody.innerHTML = `
             <tr>
                 <td colspan="7" style="text-align:center; color:#ef4444; padding:30px;">
@@ -176,8 +157,6 @@ function loadBookingHistory(token) {
     });
 }
 
-// --- FUNGSI 3: INTERAKSI NAVBAR (Dropdown & Logout) ---
-// Exposed to window so HTML onclick works
 window.toggleDropdown = function() {
     const menu = document.getElementById('userMenu');
     if (menu) {
@@ -192,13 +171,12 @@ window.logout = function() {
     }
 };
 
-// Fungsi Batal Booking
 window.cancelBooking = function(id) {
     if(!confirm("Yakin ingin membatalkan booking ini?")) return;
 
     const token = localStorage.getItem('token');
-    fetch(`${API_URL}/bookings/${id}/cancel`, { 
-        method: 'PUT', 
+    fetch(`${API_URL}/api/bookings/${id}`, { 
+        method: 'DELETE', 
         headers: { 
             'Authorization': `Bearer ${token}`,
             'Content-Type': 'application/json'
@@ -208,18 +186,17 @@ window.cancelBooking = function(id) {
     .then(json => {
         if(json.success) {
             alert("Booking berhasil dibatalkan.");
-            loadBookingHistory(token); // Reload data
+            loadBookingHistory(token); 
         } else {
             alert("Gagal: " + json.message);
         }
     })
     .catch(err => {
-        alert("Fitur pembatalan belum tersedia di server atau terjadi kesalahan.");
+        alert("Terjadi kesalahan koneksi.");
         console.error(err);
     });
 };
 
-// Tutup dropdown jika klik di luar
 window.onclick = function(event) {
     if (!event.target.closest('.user-dropdown')) {
         const menu = document.getElementById('userMenu');

@@ -13,9 +13,7 @@
     <link rel="stylesheet" href="assets/css/responsive.css">
 
     <style>
-        /* --- STYLE KHUSUS HALAMAN HISTORY --- 
-           Sisanya ikut dashboard.css agar konsisten 
-        */
+        /* --- STYLE KHUSUS HALAMAN HISTORY --- */
 
         /* TABLE CONTAINER */
         .dashboard-content { 
@@ -29,9 +27,7 @@
         }
 
         /* TABLE STYLE */
-        .bookings-table {
-            width: 100%; border-collapse: collapse;
-        }
+        .bookings-table { width: 100%; border-collapse: collapse; }
         
         .bookings-table th, .bookings-table td {
             padding: 20px; text-align: left; 
@@ -58,25 +54,14 @@
 
         /* BADGES STATUS */
         .badge { 
-            display: inline-block;
-            padding: 6px 14px; 
-            border-radius: 50px; 
-            font-size: 0.75rem; 
-            font-weight: 700; 
-            text-transform: uppercase; 
-            letter-spacing: 0.5px;
+            display: inline-block; padding: 6px 14px; 
+            border-radius: 50px; font-size: 0.75rem; 
+            font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px;
         }
         .badge-pending { background: rgba(245, 158, 11, 0.15); color: #f59e0b; border: 1px solid rgba(245, 158, 11, 0.2); }
         .badge-confirmed { background: rgba(16, 185, 129, 0.15); color: #10b981; border: 1px solid rgba(16, 185, 129, 0.2); }
         .badge-completed { background: rgba(59, 130, 246, 0.15); color: #3b82f6; border: 1px solid rgba(59, 130, 246, 0.2); }
         .badge-cancelled, .badge-canceled { background: rgba(239, 68, 68, 0.15); color: #ef4444; border: 1px solid rgba(239, 68, 68, 0.2); }
-
-        /* EMPTY STATE */
-        .empty-state {
-            text-align: center; padding: 80px 20px; color: #64748b;
-        }
-        .empty-state i { font-size: 3rem; margin-bottom: 15px; opacity: 0.5; color: var(--primary); }
-        .empty-state h3 { color: #fff; margin-bottom: 10px; }
 
         /* BUTTON ACTION */
         .btn-cancel-booking {
@@ -104,7 +89,7 @@
             </div>
 
             <div class="user-dropdown">
-                <div class="dropdown-toggle" onclick="toggleDropdown()">
+                <div class="dropdown-toggle" onclick="window.toggleDropdown()">
                     <div class="avatar-initials" id="navAvatar">U</div>
                     <span id="navUserName">User</span>
                     <i class="fas fa-chevron-down"></i>
@@ -113,7 +98,7 @@
                     <a href="profile.html" class="dropdown-item">
                         <i class="fas fa-user-cog"></i> Edit Profile
                     </a>
-                    <div class="dropdown-item text-danger" onclick="logout()">
+                    <div class="dropdown-item text-danger" onclick="window.logout()">
                         <i class="fas fa-sign-out-alt"></i> Logout
                     </div>
                 </div>
@@ -142,7 +127,8 @@
                             <th>Layanan</th>
                             <th>Barber</th>
                             <th>Harga</th>
-                            <th>Pembayaran</th> <th>Status</th>
+                            <th>Pembayaran</th> 
+                            <th>Status</th>
                             <th>Aksi</th>
                         </tr>
                     </thead>
@@ -161,50 +147,5 @@
 
     <script src="assets/js/my-bookings.js"></script>
     
-    <script>
-        // --- LOGIC USER & NAVBAR ---
-        document.addEventListener('DOMContentLoaded', () => {
-            const token = localStorage.getItem('token');
-            const userStr = localStorage.getItem('user');
-
-            if (!token || !userStr) {
-                alert("Silakan login kembali.");
-                window.location.href = 'login.html';
-                return;
-            }
-
-            const user = JSON.parse(userStr);
-            document.getElementById('navUserName').textContent = user.name.split(' ')[0];
-
-            const avatarUrl = user.profile_pic ? `https://project1-barber-dyy-website-reservasi-barbershop-l0xeswl4b.const API_URL = ''/${user.profile_pic}` : null;
-            const initial = user.name.charAt(0).toUpperCase();
-            const avatarEl = document.getElementById('navAvatar');
-
-            if (avatarUrl) {
-                avatarEl.innerHTML = `<img src="${avatarUrl}" alt="Profile">`;
-            } else {
-                avatarEl.textContent = initial;
-            }
-        });
-
-        function toggleDropdown() {
-            const menu = document.getElementById('userMenu');
-            menu.style.display = (menu.style.display === 'block') ? 'none' : 'block';
-        }
-
-        window.onclick = function(event) {
-            if (!event.target.closest('.user-dropdown')) {
-                const menu = document.getElementById('userMenu');
-                if (menu) menu.style.display = 'none';
-            }
-        }
-
-        function logout() {
-            if(confirm("Yakin ingin keluar?")) {
-                localStorage.clear();
-                window.location.href = 'login.html';
-            }
-        }
-    </script>
 </body>
 </html>

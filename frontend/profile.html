@@ -20,6 +20,10 @@
 
         /* Foto Profil Area */
         .avatar-upload { position: relative; width: 120px; height: 120px; margin: 0 auto 30px; }
+        
+        /* Container ini yang akan diisi gambar oleh JS */
+        #avatarContainer { width: 100%; height: 100%; border-radius: 50%; overflow: hidden; }
+
         .avatar-preview {
             width: 100%; height: 100%; border-radius: 50%; object-fit: cover;
             border: 3px solid #f1c40f; background: #000;
@@ -36,6 +40,7 @@
             width: 35px; height: 35px; border-radius: 50%;
             display: flex; align-items: center; justify-content: center;
             cursor: pointer; transition: 0.3s;
+            z-index: 10;
         }
         .avatar-edit-icon:hover { transform: scale(1.1); }
 
@@ -80,7 +85,6 @@
                     <div id="avatarContainer">
                         <span class="avatar-initial">U</span> 
                     </div>
-                    <img id="avatarPreview" class="avatar-preview" style="display:none;">
                     
                     <input type="file" id="imageUpload" name="profile_pic" accept=".png, .jpg, .jpeg" style="display: none;">
                     <label for="imageUpload" class="avatar-edit-icon">
@@ -115,7 +119,6 @@
     </div>
 
     <script src="assets/js/utils.js"></script> 
-    
     <script src="assets/js/profile.js"></script>
 
 </body>

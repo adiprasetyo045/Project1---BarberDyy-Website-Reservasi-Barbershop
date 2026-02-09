@@ -2,15 +2,14 @@ const multer = require('multer');
 const { v2: cloudinary } = require('cloudinary');
 const { CloudinaryStorage } = require('multer-storage-cloudinary');
 
-// 👇 KITA TEMBAK LANGSUNG KUNCINYA DI SINI (BIAR TIDAK ERROR LAGI)
-// Nanti kalau sudah sukses, baru kita amankan lagi.
+// 👇 PERBAIKAN TYPO: Huruf 'l' (el) bukan angka '1'
 cloudinary.config({
-    cloud_name: 'ds0uzbx18', 
+    cloud_name: 'ds0uzbxl8', // <--- SUDAH DIPERBAIKI (Huruf L kecil)
     api_key: '737677695786219', 
     api_secret: '7cRFvjM_uWdT-f0Pgc0eQtezS_g' 
 });
 
-console.log("✅ CLOUDINARY CONFIG LOADED MANUALLY");
+console.log("✅ CLOUDINARY CONFIG LOADED MANUALLY (FIXED TYPO)");
 
 const storage = new CloudinaryStorage({
     cloudinary: cloudinary,

@@ -1,26 +1,37 @@
 const db = require('../config/database');
 
 const Booking = {
-    // Create new booking
+    // 1. Create new booking
     async create(bookingData) {
-        const { user_id, service_id, barber_id, booking_date, start_time, end_time, notes } = bookingData;
+        const { user_id, service_id, barber_id, booking_date, start_time, end_time, payment_method, payment_proof, status } = bookingData;
         
+        // Default status jika tidak ada
+        const bookingStatus = status || 'pending';
+
         const query = `
             INSERT INTO bookings 
-            (user_id, service_id, barber_id, booking_date, start_time, end_time, notes)
-            VALUES ($1, $2, $3, $4, $5, $6, $7)
+            (user_id, service_id, barber_id, booking_date, start_time, end_time, payment_method, payment_proof, status)
+            VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
             RETURNING *
         `;
         
-        const values = [user_id, service_id, barber_id, booking_date, start_time, end_time, notes];
-        const result = await db.query(query, values);
-        return result.rows[0];
+        const values = [user_id, service_id, barber_id, booking_date, start_time, end_time, payment_method, payment_proof, bookingStatus];
+        
+        try {
+            const result = await db.query(query, values);
+            return result.rows[0];
+        } catch (err) {
+            throw err;
+        }
     },
 
-    // Get user's bookings
+    // 2. Get user's bookings (History)
     async getByUserId(userId) {
         const query = `
-            SELECT b.*, s.name as service_name, s.price, br.name as barber_name
+            SELECT 
+                b.id, b.booking_date, b.start_time, b.status, b.payment_method,
+                s.name as service_name, s.price, s.duration,
+                br.name as barber_name, br.image as barber_image
             FROM bookings b
             JOIN services s ON b.service_id = s.id
             JOIN barbers br ON b.barber_id = br.id
@@ -31,15 +42,17 @@ const Booking = {
         return result.rows;
     },
 
-    // Get all bookings (for admin)
+    // 3. Get all bookings (For Admin Dashboard)
     async getAll() {
         const query = `
-            SELECT b.*, 
-                   u.full_name as customer_name, 
-                   u.email as customer_email,
-                   s.name as service_name, 
-                   s.price,
-                   br.name as barber_name
+            SELECT 
+                b.*, 
+                u.name as customer_name, 
+                u.email as customer_email,
+                u.phone as customer_phone,
+                s.name as service_name, 
+                s.price,
+                br.name as barber_name
             FROM bookings b
             JOIN users u ON b.user_id = u.id
             JOIN services s ON b.service_id = s.id
@@ -50,7 +63,7 @@ const Booking = {
         return result.rows;
     },
 
-    // Update booking status
+    // 4. Update booking status (Approve/Reject/Complete)
     async updateStatus(id, status) {
         const query = `
             UPDATE bookings 
@@ -62,39 +75,32 @@ const Booking = {
         return result.rows[0];
     },
 
-    // Get available time slots
-    async getAvailableSlots(date, barberId) {
+    // 5. Get Booked Slots (PENTING: Ini yang dipakai frontend booking.js)
+    // Mengambil daftar jam yang SUDAH terisi untuk barber tertentu di tanggal tertentu
+    async getBookedSlots(date, barberId) {
         const query = `
-            SELECT 
-                wh.start_time,
-                wh.end_time,
-                s.duration,
-                ARRAY_AGG(b.start_time) as booked_times
-            FROM working_hours wh
-            JOIN barbers br ON wh.barber_id = br.id
-            CROSS JOIN services s
-            LEFT JOIN bookings b ON b.barber_id = wh.barber_id 
-                AND b.booking_date = $1 
-                AND b.status NOT IN ('cancelled')
-            WHERE EXTRACT(DOW FROM $1::date) = wh.day_of_week
-                AND wh.barber_id = $2
-                AND br.is_active = true
-                AND s.is_active = true
-            GROUP BY wh.start_time, wh.end_time, s.duration
+            SELECT start_time 
+            FROM bookings 
+            WHERE barber_id = $1 
+            AND booking_date = $2 
+            AND status NOT IN ('cancelled', 'rejected')
         `;
         
-        const result = await db.query(query, [date, barberId]);
-        return result.rows;
+        const result = await db.query(query, [barberId, date]);
+        
+        // Mengembalikan array jam saja, misal: ['10:00:00', '14:00:00']
+        return result.rows.map(row => row.start_time);
     },
 
-    // Check for conflicting bookings
+    // 6. Check for conflicting bookings (Validasi Ganda)
+    // Pastikan tidak ada booking yang tumpang tindih sebelum insert
     async checkConflict(barberId, date, startTime, endTime) {
         const query = `
             SELECT COUNT(*) as conflict_count
             FROM bookings
             WHERE barber_id = $1
                 AND booking_date = $2
-                AND status NOT IN ('cancelled')
+                AND status NOT IN ('cancelled', 'rejected')
                 AND (
                     (start_time < $4 AND end_time > $3)
                 )

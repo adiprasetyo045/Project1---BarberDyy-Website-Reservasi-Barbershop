@@ -1,5 +1,4 @@
 const db = require('../config/database');
-const { sendEmail, createTemplate } = require('../services/emailService');
 
 exports.getAllBookings = async (req, res) => {
     try {
@@ -20,7 +19,7 @@ exports.getAllBookings = async (req, res) => {
         `);
         res.json({ success: true, data: result.rows });
     } catch (err) {
-        console.error("❌ Error Admin Dashboard:", err.message);
+        console.error(err);
         res.status(500).json({ success: false, message: 'Server Error' });
     }
 };
@@ -41,8 +40,8 @@ exports.updateBookingStatus = async (req, res) => {
         
         res.json({ success: true, message: 'Status berhasil diperbarui', data: result.rows[0] });
     } catch (err) {
-        console.error("Error Update:", err.message);
-        res.status(500).json({ success: false, message: 'Gagal update status: ' + err.message });
+        console.error(err);
+        res.status(500).json({ success: false, message: 'Gagal update status' });
     }
 };
 
@@ -52,7 +51,7 @@ exports.getNotificationCount = async (req, res) => {
         const count = parseInt(result.rows[0].count);
         res.json({ success: true, count });
     } catch (err) {
-        console.error("Error Notification:", err.message);
+        console.error(err);
         res.status(500).json({ success: false, count: 0 });
     }
 };
@@ -68,10 +67,10 @@ exports.createBooking = async (req, res) => {
             return res.status(400).json({ success: false, message: 'Data booking utama tidak lengkap.' });
         }
 
-        const serviceResult = await db.query('SELECT price, name, duration FROM services WHERE id = $1', [service_id]);
+        const serviceResult = await db.query('SELECT price, duration FROM services WHERE id = $1', [service_id]);
         if (serviceResult.rows.length === 0) return res.status(404).json({ success: false, message: 'Layanan tidak ditemukan' });
         
-        const { price, name: service_name, duration } = serviceResult.rows[0];
+        const { price, duration } = serviceResult.rows[0];
 
         const [hours, minutes] = booking_time.split(':').map(Number);
         const startDate = new Date();
@@ -106,8 +105,8 @@ exports.createBooking = async (req, res) => {
         res.status(201).json({ success: true, message: 'Booking Berhasil!', data: newBooking.rows[0] });
 
     } catch (err) {
-        console.error("❌ Error Create Booking:", err);
-        res.status(500).json({ success: false, message: 'Server Error: ' + err.message });
+        console.error(err);
+        res.status(500).json({ success: false, message: 'Server Error' });
     }
 };
 

@@ -13,7 +13,7 @@
     <link rel="stylesheet" href="assets/css/responsive.css">
 
     <style>
-        /* --- STYLE KHUSUS BOOKING --- */
+        /* --- STYLE KHUSUS BOOKING (Tambahan di luar styles.css) --- */
 
         /* WIZARD STEPS */
         .booking-steps {
@@ -425,9 +425,9 @@
 
                     <div class="nav-buttons">
                         <button type="button" class="btn-outline" onclick="window.prevStep(3)">Kembali</button>
-                        <button type="button" class="btn-primary" onclick="submitBooking()">
-    Selesaikan Booking <i class="fas fa-check"></i>
-</button>
+                        <button type="button" id="btnSubmitBooking" class="btn-primary" onclick="submitBooking()">
+                            Selesaikan Booking <i class="fas fa-check"></i>
+                        </button>
                     </div>
                 </div>
 
@@ -437,7 +437,9 @@
 
     <script src="assets/js/booking.js"></script>
     <script>
-        // LOGIC USER & NAVBAR
+        // LOGIC USER & NAVBAR (DENGAN PERBAIKAN URL GAMBAR)
+        const API_URL = ''; // Gunakan Relative Path
+
         document.addEventListener('DOMContentLoaded', () => {
             const token = localStorage.getItem('token');
             const userStr = localStorage.getItem('user');
@@ -448,11 +450,19 @@
             }
             const user = JSON.parse(userStr);
             document.getElementById('navUserName').textContent = user.name.split(' ')[0];
-            const avatarUrl = user.profile_pic ? `https://project1-barber-dyy-website-reservasi-barbershop-l0xeswl4b.const API_URL = ''/${user.profile_pic}` : null;
+            
+            // 👇 PERBAIKAN: Gunakan API_URL yang benar
+            let avatarUrl = null;
+            if (user.profile_pic && !user.profile_pic.includes('default')) {
+                avatarUrl = `${API_URL}/${user.profile_pic}`;
+            }
+
             const initial = user.name.charAt(0).toUpperCase();
             const avatarEl = document.getElementById('navAvatar');
+            
             if (avatarUrl) {
-                avatarEl.innerHTML = `<img src="${avatarUrl}" alt="Profile">`;
+                // Tambahkan onError handler agar kalau gambar rusak, balik ke inisial
+                avatarEl.innerHTML = `<img src="${avatarUrl}" alt="Profile" style="width:100%;height:100%;object-fit:cover;" onerror="this.parentElement.textContent='${initial}'">`;
             } else {
                 avatarEl.textContent = initial;
             }

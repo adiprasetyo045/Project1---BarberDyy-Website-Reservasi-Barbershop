@@ -46,7 +46,6 @@ async function checkAuthAndLoadUser() {
             const localUser = localStorage.getItem('user');
             if (localUser) renderUserHeader(JSON.parse(localUser));
         }
-
     } catch (e) {
         const localUser = localStorage.getItem('user');
         if (localUser) renderUserHeader(JSON.parse(localUser));
@@ -76,7 +75,6 @@ function renderUserHeader(user) {
             `;
             avatarEl.classList.remove('avatar-initial'); 
         } else {
-            avatarEl.textContent = initial;
             avatarEl.style.backgroundColor = '#f1c40f';
             avatarEl.style.color = '#000';
             avatarEl.style.display = 'flex';
@@ -255,14 +253,18 @@ window.nextStep = function(step) {
 window.prevStep = function(step) { showStep(step); };
 
 function showStep(step) {
+    // 1. Sembunyikan semua Form
     document.querySelectorAll('.form-step').forEach(el => el.classList.remove('active'));
     
+    // 2. Tampilkan Form yang dipilih
     const stepEl = document.getElementById(`step${step}`);
     if(stepEl) stepEl.classList.add('active');
     
+    // 3. Update Indikator (Sekarang pakai ID indicatorX)
     document.querySelectorAll('.step').forEach((el, idx) => {
-        if (idx + 1 <= step) el.classList.add('active');
-        else el.classList.remove('active');
+        el.classList.remove('active', 'completed'); // Reset dulu
+        if (idx + 1 === step) el.classList.add('active');
+        else if (idx + 1 < step) el.classList.add('completed');
     });
 }
 
@@ -279,7 +281,8 @@ async function loadServices() {
     try {
         const res = await fetch(`${API_URL}/api/services`);
         const json = await res.json();
-        if (json.data) {
+        
+        if (json.data && json.data.length > 0) {
             container.innerHTML = json.data.map(s => {
                 let imgSrc = s.image || 'assets/images/default-service.jpg';
                 if(s.image && !s.image.startsWith('http')) {
@@ -298,8 +301,13 @@ async function loadServices() {
                     </div>
                 </div>
             `}).join('');
+        } else {
+            container.innerHTML = `<p style="grid-column:1/-1; text-align:center; color:#888;">Belum ada layanan tersedia.</p>`;
         }
-    } catch(e) { console.error(e); }
+    } catch(e) { 
+        console.error(e); 
+        container.innerHTML = `<p style="grid-column:1/-1; text-align:center; color:#e74c3c;">Gagal memuat layanan. Coba refresh.</p>`;
+    }
 }
 
 async function loadBarbers() {
@@ -308,7 +316,7 @@ async function loadBarbers() {
     try {
         const res = await fetch(`${API_URL}/api/barbers`);
         const json = await res.json();
-        if (json.data) {
+        if (json.data && json.data.length > 0) {
             container.innerHTML = json.data.map(b => {
                 let imgSrc = b.image || `https://ui-avatars.com/api/?name=${b.name}&background=random`;
                 if(b.image && !b.image.startsWith('http')) {
@@ -326,6 +334,8 @@ async function loadBarbers() {
                     </div>
                 </div>
             `}).join('');
+        } else {
+             container.innerHTML = `<p style="grid-column:1/-1; text-align:center; color:#888;">Belum ada barber tersedia.</p>`;
         }
     } catch(e) { console.error(e); }
 }

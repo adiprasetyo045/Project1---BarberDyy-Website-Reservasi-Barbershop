@@ -1,8 +1,20 @@
 const multer = require('multer');
 const { v2: cloudinary } = require('cloudinary');
 const { CloudinaryStorage } = require('multer-storage-cloudinary');
+// 👇 Tambahan: Pastikan env vars terbaca
+require('dotenv').config();
 
-// 1. Konfigurasi Cloudinary (Mengambil kunci dari Vercel Environment Variables)
+// 👇 --- AREA DIAGNOSA (CCTV) ---
+// Cek Log Vercel setelah upload file. Kalau isinya "❌ KOSONG", berarti settingan Vercel belum benar.
+console.log("========================================");
+console.log("🔍 CEK KONEKSI CLOUDINARY (upload.js):");
+console.log("1. CLOUD_NAME:", process.env.CLOUDINARY_CLOUD_NAME ? `✅ Terbaca (${process.env.CLOUDINARY_CLOUD_NAME})` : "❌ KOSONG/TIDAK TERBACA");
+console.log("2. API_KEY:", process.env.CLOUDINARY_API_KEY ? "✅ Terbaca (Disensor)" : "❌ KOSONG/TIDAK TERBACA");
+console.log("3. API_SECRET:", process.env.CLOUDINARY_API_SECRET ? "✅ Terbaca (Disensor)" : "❌ KOSONG/TIDAK TERBACA");
+console.log("========================================");
+// 👆 --- BATAS AREA DIAGNOSA ---
+
+// 1. Konfigurasi Cloudinary
 cloudinary.config({
     cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
     api_key: process.env.CLOUDINARY_API_KEY,
@@ -13,14 +25,13 @@ cloudinary.config({
 const storage = new CloudinaryStorage({
     cloudinary: cloudinary,
     params: {
-        folder: 'barberdyy-uploads', // Nama folder yang akan dibuat di Cloudinary
-        allowed_formats: ['jpg', 'png', 'jpeg', 'webp'], // Format yang diizinkan
-        // Opsi Transformasi (Otomatis resize gambar biar hemat kuota & cepat loading)
+        folder: 'barberdyy-uploads', // Nama folder di Cloudinary
+        allowed_formats: ['jpg', 'png', 'jpeg', 'webp'],
         transformation: [{ width: 500, height: 500, crop: 'limit' }] 
     }
 });
 
-// 3. Filter File (Validasi tipe file)
+// 3. Filter File
 const fileFilter = (req, file, cb) => {
     const allowedTypes = /jpeg|jpg|png|webp|gif/;
     const extname = allowedTypes.test(file.originalname.toLowerCase());
@@ -35,7 +46,7 @@ const fileFilter = (req, file, cb) => {
 
 const upload = multer({ 
     storage: storage,
-    limits: { fileSize: 5 * 1024 * 1024 }, // Maksimal ukuran file 5MB
+    limits: { fileSize: 5 * 1024 * 1024 }, // Maksimal 5MB
     fileFilter: fileFilter
 });
 

@@ -2,9 +2,9 @@ const multer = require('multer');
 const { v2: cloudinary } = require('cloudinary');
 const { CloudinaryStorage } = require('multer-storage-cloudinary');
 
-// 👇 PERBAIKAN TYPO: Huruf 'l' (el) bukan angka '1'
+// 👇 PERBAIKAN: Huruf 'l' (el) bukan angka '1'
 cloudinary.config({
-    cloud_name: 'ds0uzbxl8', // <--- SUDAH DIPERBAIKI (Huruf L kecil)
+    cloud_name: 'ds0uzbxl8', // <--- SUDAH DIPERBAIKI (Huruf l kecil)
     api_key: '737677695786219', 
     api_secret: '7cRFvjM_uWdT-f0Pgc0eQtezS_g' 
 });

@@ -26,6 +26,7 @@ exports.register = async (req, res) => {
             success: true, message: 'Registrasi berhasil', token, user 
         });
     } catch (error) {
+        console.error("Register Error:", error);
         res.status(500).json({ success: false, message: 'Gagal mendaftar.' });
     }
 };
@@ -56,13 +57,19 @@ exports.login = async (req, res) => {
         const { password: _, ...userData } = user;
         res.json({ success: true, message: 'Login berhasil', token, user: userData });
     } catch (error) {
+        console.error("Login Error:", error);
         res.status(500).json({ success: false, message: 'Terjadi kesalahan server' });
     }
 };
 
 exports.updateProfile = async (req, res) => {
     try {
-        const userId = req.user.id;
+        // 1. Cek User ID
+        const userId = req.user ? req.user.id : null;
+        if (!userId) {
+            return res.status(401).json({ success: false, message: "Unauthorized: User ID tidak ditemukan." });
+        }
+
         const { name, phone, password } = req.body;
         
         let query = 'UPDATE users SET updated_at = NOW()';
@@ -87,25 +94,34 @@ exports.updateProfile = async (req, res) => {
             paramIndex++;
         }
         
+        // 2. Cek File Upload (Cloudinary)
         if (req.file) {
-            query += `, profile_pic = $${paramIndex}`;
-            params.push(req.file.path);
-            paramIndex++;
+            // Pastikan path ada. Kalau Cloudinary gagal, req.file.path biasanya undefined.
+            const imagePath = req.file.path || req.file.secure_url;
+            if (imagePath) {
+                query += `, profile_pic = $${paramIndex}`;
+                params.push(imagePath);
+                paramIndex++;
+            }
         }
 
         query += ` WHERE id = $${paramIndex} RETURNING id, name, email, phone, role, profile_pic, is_member, membership_status`;
         params.push(userId);
 
+        // 3. Eksekusi Query dengan Error Handling
         const result = await db.query(query, params);
         
         if (result.rows.length === 0) {
-            return res.status(404).json({ success: false, message: 'User tidak ditemukan' });
+            return res.status(404).json({ success: false, message: 'User tidak ditemukan saat update.' });
         }
 
         res.json({ success: true, message: 'Profil berhasil diperbarui!', user: result.rows[0] });
 
     } catch (err) {
-        res.status(500).json({ success: false, message: 'Gagal update profil.' });
+        // LOG ERROR LENGKAP AGAR KITA TAHU PENYEBABNYA
+        console.error("❌ Update Profile Error (DETAIL):", JSON.stringify(err, null, 2));
+        console.error("❌ Pesan Error:", err.message);
+        res.status(500).json({ success: false, message: 'Gagal update profil: ' + err.message });
     }
 };
 
@@ -114,7 +130,7 @@ exports.buyMembership = async (req, res) => {
         const userId = req.user.id;
         if (!req.file) return res.status(400).json({ success: false, message: 'Wajib upload bukti pembayaran!' });
 
-        const proofImage = req.file.path; 
+        const proofImage = req.file.path || req.file.secure_url; 
 
         const query = `
             UPDATE users 
@@ -125,26 +141,16 @@ exports.buyMembership = async (req, res) => {
         const result = await db.query(query, [proofImage, userId]);
         const updatedUser = result.rows[0];
 
+        // Email ke User (Fire & Forget)
         const userSubject = '⏳ Bukti Pembayaran Diterima';
         const userContent = `
             <h3>Halo ${updatedUser.name},</h3>
             <p>Terima kasih! Bukti pembayaran membership Anda sudah kami terima.</p>
-            <div style="background: #fcf8e3; padding: 10px; border-radius: 5px; color: #8a6d3b;">
-                Status: <b>MENUNGGU VERIFIKASI ADMIN</b>
-            </div>
         `;
-        sendEmail(updatedUser.email, userSubject, createTemplate(userSubject, userContent)).catch(err => console.error("Email User Error", err));
-
-        const adminEmail = process.env.SMTP_USER;
-        if (adminEmail) {
-            const adminSubject = '🔔 ALERT: Pengajuan Membership Baru!';
-            const adminContent = `
-                <h3>Halo Admin,</h3>
-                <p>User <b>${updatedUser.name}</b> (${updatedUser.email}) baru saja mengupload bukti transfer.</p>
-                <p>Silakan cek Dashboard Admin untuk verifikasi.</p>
-            `;
-            sendEmail(adminEmail, adminSubject, createTemplate(adminSubject, adminContent)).catch(err => console.error("Email Admin Error", err));
-        }
+        // Cek dulu apakah sendEmail ada sebelum dipanggil (biar gak crash kalau email error)
+        try {
+            sendEmail(updatedUser.email, userSubject, createTemplate(userSubject, userContent)).catch(e => console.error("Mail Error", e));
+        } catch(e) { console.error("Email service skip"); }
 
         res.json({ 
             success: true, 
@@ -154,6 +160,7 @@ exports.buyMembership = async (req, res) => {
         });
 
     } catch (error) {
+        console.error("Membership Error:", error);
         res.status(500).json({ success: false, message: 'Gagal memproses data.' });
     }
 };
@@ -187,12 +194,6 @@ exports.verifyMembership = async (req, res) => {
                 WHERE id = $1
             `, [userId]);
 
-            const subject = '🎉 Selamat! Membership BarberDyy Aktif';
-            const html = `
-                <h2 style="color: #27ae60;">Membership Disetujui!</h2>
-                <p>Halo <b>${user.name}</b>, akun Anda kini sudah <b>PREMIUM</b> selama 30 hari.</p>
-            `;
-            sendEmail(user.email, subject, createTemplate(subject, html)).catch(console.error);
             return res.json({ success: true, message: 'User berhasil di-approve!' });
 
         } else {
@@ -202,12 +203,6 @@ exports.verifyMembership = async (req, res) => {
                 WHERE id = $1
             `, [userId]);
 
-            const subject = '⚠️ Pembayaran Ditolak';
-            const html = `
-                <h2 style="color: #c0392b;">Mohon Maaf</h2>
-                <p>Halo <b>${user.name}</b>, bukti pembayaran membership Anda tidak valid. Silakan upload ulang.</p>
-            `;
-            sendEmail(user.email, subject, createTemplate(subject, html)).catch(console.error);
             return res.json({ success: true, message: 'Pengajuan ditolak.' });
         }
 

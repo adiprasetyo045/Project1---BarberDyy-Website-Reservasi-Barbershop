@@ -1,205 +1,186 @@
-const API_URL = ''; 
+const API_URL = '';
 
 document.addEventListener('DOMContentLoaded', () => {
+    checkAuthAndLoadUser();
+    loadBookings();
+});
+
+async function checkAuthAndLoadUser() {
     const token = localStorage.getItem('token');
-    
     if (!token) {
-        alert("Sesi habis. Silakan login kembali.");
+        alert("Silakan login terlebih dahulu.");
         window.location.href = 'login.html';
         return;
     }
 
-    loadUserData();
-    loadBookingHistory(token);
-});
-
-function loadUserData() {
-    const userStr = localStorage.getItem('user');
-    if (userStr) {
-        try {
-            const user = JSON.parse(userStr);
-            
-            const nameEl = document.getElementById('navUserName'); 
-            if (nameEl) nameEl.textContent = user.name.split(' ')[0];
-
-            const avatarEl = document.getElementById('navAvatar');
-            if (avatarEl) {
-                if (user.profile_pic && !user.profile_pic.includes('default')) {
-                    const imgSrc = `${API_URL}/${user.profile_pic}`;
-                    avatarEl.innerHTML = `<img src="${imgSrc}" style="width:100%; height:100%; object-fit:cover; border-radius: 50%;" onerror="this.parentElement.innerHTML='${user.name.charAt(0).toUpperCase()}'">`;
-                } else {
-                    avatarEl.textContent = user.name.charAt(0).toUpperCase();
-                }
+    try {
+        const res = await fetch(`${API_URL}/api/users/profile`, { 
+            method: 'GET',
+            headers: { 
+                'Authorization': `Bearer ${token}`,
+                'Content-Type': 'application/json'
             }
-        } catch (e) {
-            console.error("Error parsing user data:", e);
+        });
+
+        if (res.ok) {
+            const json = await res.json();
+            if (json.success) {
+                const user = json.data;
+                localStorage.setItem('user', JSON.stringify(user));
+                renderUserHeader(user);
+            }
+        } else {
+            const localUser = localStorage.getItem('user');
+            if (localUser) renderUserHeader(JSON.parse(localUser));
+        }
+
+    } catch (e) {
+        const localUser = localStorage.getItem('user');
+        if (localUser) renderUserHeader(JSON.parse(localUser));
+    }
+}
+
+function renderUserHeader(user) {
+    const userNameEl = document.getElementById('navUserName');
+    if (userNameEl) userNameEl.textContent = user.name.split(' ')[0];
+
+    const avatarEl = document.getElementById('navAvatar');
+    if (avatarEl) {
+        const initial = user.name.charAt(0).toUpperCase();
+        
+        if (user.profile_pic && !user.profile_pic.includes('default')) {
+            let imgUrl = user.profile_pic;
+            if (!imgUrl.startsWith('http')) {
+                imgUrl = `${API_URL}/${imgUrl}`;
+            }
+            imgUrl += `?t=${new Date().getTime()}`;
+
+            avatarEl.innerHTML = `
+                <img src="${imgUrl}" 
+                     style="width:100%; height:100%; object-fit:cover; border-radius:50%;"
+                     onerror="this.parentElement.innerHTML='${initial}'" 
+                >
+            `;
+            avatarEl.style.background = 'transparent';
+            avatarEl.style.border = 'none';
+        } else {
+            avatarEl.textContent = initial;
+            avatarEl.style.backgroundColor = '#f1c40f';
+            avatarEl.style.color = '#000';
+            avatarEl.style.display = 'flex';
+            avatarEl.style.alignItems = 'center';
+            avatarEl.style.justifyContent = 'center';
+            avatarEl.style.fontWeight = 'bold';
+            avatarEl.innerHTML = initial;
         }
     }
 }
 
-function loadBookingHistory(token) {
-    const tableBody = document.getElementById('bookingsTableBody');
+async function loadBookings() {
+    const token = localStorage.getItem('token');
+    const tbody = document.getElementById('bookingsTableBody');
 
-    tableBody.innerHTML = `
-        <tr>
-            <td colspan="7" style="text-align:center; padding: 50px; color: #666;">
-                <i class="fas fa-spinner fa-spin" style="font-size: 2rem; margin-bottom: 10px; color: #f1c40f;"></i>
-                <br>Sedang memuat data...
-            </td>
-        </tr>
-    `;
-
-    fetch(`${API_URL}/api/bookings/my-bookings`, { 
-        headers: {
-            'Authorization': `Bearer ${token}`
-        }
-    })
-    .then(res => {
-        if (!res.ok) {
-            if(res.status === 401 || res.status === 403) {
-                alert("Sesi habis. Silakan login ulang.");
-                localStorage.clear();
-                window.location.href = 'login.html';
-                return; 
+    try {
+        const res = await fetch(`${API_URL}/api/bookings/my-bookings`, {
+            method: 'GET',
+            headers: {
+                'Authorization': `Bearer ${token}`,
+                'Content-Type': 'application/json'
             }
-            throw new Error(`HTTP error! status: ${res.status}`);
-        }
-        return res.json();
-    })
-    .then(response => {
-        if (response.success && response.data.length > 0) {
-            tableBody.innerHTML = ''; 
-            
-            const sortedData = response.data.sort((a, b) => b.id - a.id);
+        });
 
-            sortedData.forEach(booking => {
-                const dateObj = new Date(booking.booking_date);
-                const formattedDate = dateObj.toLocaleDateString('id-ID', { 
-                    weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' 
-                });
+        const json = await res.json();
+
+        if (json.success) {
+            if (json.data.length === 0) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="7" style="text-align:center; padding: 40px; color: #888;">
+                            <i class="far fa-calendar-times" style="font-size: 2rem; margin-bottom: 10px;"></i><br>
+                            Belum ada riwayat booking.<br>
+                            <a href="booking.html" style="color:var(--primary); text-decoration:none;">Buat Booking Sekarang</a>
+                        </td>
+                    </tr>
+                `;
+                return;
+            }
+
+            tbody.innerHTML = json.data.map(b => {
+                const dateObj = new Date(b.booking_date);
+                const dateStr = dateObj.toLocaleDateString('id-ID', { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' });
                 
-                const formattedTime = booking.start_time ? booking.start_time.slice(0, 5) : (booking.booking_time ? booking.booking_time.slice(0, 5) : '-');
+                let statusClass = 'badge-pending';
+                if (b.status === 'confirmed') statusClass = 'badge-confirmed';
+                if (b.status === 'completed') statusClass = 'badge-completed';
+                if (b.status === 'cancelled') statusClass = 'badge-cancelled';
 
-                let badgeClass = 'badge-pending'; 
-                const status = booking.status ? booking.status.toLowerCase() : 'pending';
-
-                if (status === 'confirmed') badgeClass = 'badge-confirmed';
-                else if (status === 'completed') badgeClass = 'badge-completed';
-                else if (status === 'canceled' || status === 'cancelled') badgeClass = 'badge-cancelled';
-
-                let rawPrice = booking.total_price || booking.price || 0;
-                if (!rawPrice && booking.service_price) rawPrice = booking.service_price;
-                let formattedPrice = "Rp " + parseInt(rawPrice).toLocaleString('id-ID');
-
-                let paymentBadge = '';
-                if(booking.payment_method === 'online') {
-                    paymentBadge = `<span style="color:#3b82f6; font-weight:600; font-size:0.85rem;"><i class="fas fa-university"></i> Transfer</span>`;
-                } else {
-                    paymentBadge = `<span style="color:#94a3b8; font-size:0.85rem;"><i class="fas fa-money-bill"></i> Cash</span>`;
+                let paymentInfo = '<span style="color:#aaa;"><i class="fas fa-money-bill-wave"></i> Cash</span>';
+                if (b.payment_method === 'online') {
+                    paymentInfo = '<span style="color:#3498db;"><i class="fas fa-university"></i> Transfer</span>';
                 }
 
+                // Tombol Batalkan hanya muncul jika status Pending
                 let actionBtn = '';
-                if(status === 'pending') {
+                if (b.status === 'pending') {
                     actionBtn = `
-                        <button class="btn-cancel-booking" onclick="window.cancelBooking(${booking.id})">
+                        <button class="btn-cancel-booking" onclick="cancelBooking(${b.id})">
                             <i class="fas fa-times"></i> Batal
                         </button>
                     `;
                 }
 
-                const row = `
+                return `
                     <tr>
                         <td>
-                            <div style="font-weight:600; color:#fff;">${formattedDate}</div>
-                            <div style="font-size:0.85rem; color:#888; margin-top:4px;">
-                                <i class="fas fa-clock"></i> ${formattedTime} WIB
-                            </div>
+                            <div style="font-weight:bold; color:#fff;">${dateStr}</div>
+                            <div style="font-size:0.85rem; color:#888;"><i class="far fa-clock"></i> ${b.booking_time} WIB</div>
                         </td>
-                        <td style="color:#fff; font-weight:500;">${booking.service_name || '-'}</td>
-                        <td style="color:#aaa;">${booking.barber_name || '-'}</td>
-                        <td style="font-weight:bold; color:#f1c40f;">${formattedPrice}</td>
-                        
-                        <td>${paymentBadge}</td>
-                        
-                        <td>
-                            <span class="badge ${badgeClass}">
-                                ${status.charAt(0).toUpperCase() + status.slice(1)}
-                            </span>
-                        </td>
+                        <td>${b.service_name}</td>
+                        <td>${b.barber_name}</td>
+                        <td style="color:var(--primary); font-weight:bold;">Rp ${parseInt(b.price).toLocaleString('id-ID')}</td>
+                        <td>${paymentInfo}</td>
+                        <td><span class="badge ${statusClass}">${b.status}</span></td>
                         <td>${actionBtn}</td>
                     </tr>
                 `;
-                tableBody.innerHTML += row;
-            });
+            }).join('');
         } else {
-            tableBody.innerHTML = `
-                <tr>
-                    <td colspan="7" style="text-align:center; padding:60px 20px; color:#666;">
-                        <i class="fas fa-calendar-times" style="font-size:3rem; margin-bottom:15px; opacity:0.3;"></i>
-                        <p style="font-size:1rem;">Belum ada riwayat booking.</p>
-                        <a href="booking.html" style="color:#f1c40f; font-weight:bold; text-decoration:none; margin-top:10px; display:inline-block;">
-                            Buat Booking Baru &rarr;
-                        </a>
-                    </td>
-                </tr>`;
+            tbody.innerHTML = `<tr><td colspan="7" class="text-center text-danger">Gagal memuat data.</td></tr>`;
         }
-    })
-    .catch(err => {
-        console.error("Error fetching booking history:", err);
-        tableBody.innerHTML = `
-            <tr>
-                <td colspan="7" style="text-align:center; color:#ef4444; padding:30px;">
-                    <i class="fas fa-exclamation-triangle" style="font-size:1.5rem; margin-bottom:10px;"></i><br>
-                    Gagal memuat data. Pastikan server backend menyala.<br>
-                    <small>${err.message}</small>
-                </td>
-            </tr>`;
-    });
+
+    } catch (e) {
+        console.error(e);
+        tbody.innerHTML = `<tr><td colspan="7" class="text-center text-danger">Terjadi kesalahan koneksi.</td></tr>`;
+    }
 }
 
-window.toggleDropdown = function() {
-    const menu = document.getElementById('userMenu');
-    if (menu) {
-        menu.style.display = (menu.style.display === 'block') ? 'none' : 'block';
-    }
-};
+async function cancelBooking(id) {
+    if (!confirm("Yakin ingin membatalkan booking ini?")) return;
 
-window.logout = function() {
+    const token = localStorage.getItem('token');
+    try {
+        const res = await fetch(`${API_URL}/api/bookings/cancel/${id}`, {
+            method: 'PUT',
+            headers: {
+                'Authorization': `Bearer ${token}`
+            }
+        });
+
+        const json = await res.json();
+        if (json.success) {
+            alert("Booking berhasil dibatalkan.");
+            loadBookings(); // Reload data
+        } else {
+            alert("Gagal: " + json.message);
+        }
+    } catch (e) {
+        alert("Terjadi kesalahan server.");
+    }
+}
+
+function logout() {
     if(confirm("Yakin ingin keluar?")) {
         localStorage.clear();
         window.location.href = 'login.html';
     }
-};
-
-window.cancelBooking = function(id) {
-    if(!confirm("Yakin ingin membatalkan booking ini?")) return;
-
-    const token = localStorage.getItem('token');
-    fetch(`${API_URL}/api/bookings/${id}`, { 
-        method: 'DELETE', 
-        headers: { 
-            'Authorization': `Bearer ${token}`,
-            'Content-Type': 'application/json'
-        }
-    })
-    .then(res => res.json())
-    .then(json => {
-        if(json.success) {
-            alert("Booking berhasil dibatalkan.");
-            loadBookingHistory(token); 
-        } else {
-            alert("Gagal: " + json.message);
-        }
-    })
-    .catch(err => {
-        alert("Terjadi kesalahan koneksi.");
-        console.error(err);
-    });
-};
-
-window.onclick = function(event) {
-    if (!event.target.closest('.user-dropdown')) {
-        const menu = document.getElementById('userMenu');
-        if (menu) menu.style.display = 'none';
-    }
-};
+}

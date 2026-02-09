@@ -89,16 +89,18 @@
             </div>
 
             <div class="user-dropdown">
-                <div class="dropdown-toggle" onclick="window.toggleDropdown()">
-                    <div class="avatar-initials" id="navAvatar">U</div>
-                    <span id="navUserName">User</span>
-                    <i class="fas fa-chevron-down"></i>
+                <div class="dropdown-toggle" onclick="document.getElementById('userMenu').style.display = document.getElementById('userMenu').style.display === 'block' ? 'none' : 'block'">
+                    <div class="user-profile" style="display:flex; align-items:center; gap:10px;">
+                        <div class="avatar avatar-initial" id="navAvatar" style="width:35px; height:35px; border-radius:50%; background:#f1c40f; color:#000; display:flex; align-items:center; justify-content:center; font-weight:bold;">U</div>
+                        <span id="navUserName" style="color:#fff;">User</span>
+                        <i class="fas fa-chevron-down" style="color:#aaa; font-size:0.8rem;"></i>
+                    </div>
                 </div>
                 <div class="dropdown-menu" id="userMenu">
                     <a href="profile.html" class="dropdown-item">
                         <i class="fas fa-user-cog"></i> Edit Profile
                     </a>
-                    <div class="dropdown-item text-danger" onclick="window.logout()">
+                    <div class="dropdown-item text-danger" onclick="if(confirm('Yakin ingin keluar?')){localStorage.clear();window.location.href='login.html';}">
                         <i class="fas fa-sign-out-alt"></i> Logout
                     </div>
                 </div>
@@ -145,6 +147,7 @@
         </div>
     </div>
 
+    <script src="assets/js/utils.js"></script>
     <script src="assets/js/my-bookings.js"></script>
     
 </body>

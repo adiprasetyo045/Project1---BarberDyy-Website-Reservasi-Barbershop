@@ -12,17 +12,79 @@ window.bookingData = {
 };
 
 document.addEventListener('DOMContentLoaded', () => {
-    checkAuth();
+    checkAuthAndLoadUser();
     loadServices();
     loadBarbers(); 
     setupDateInput();
 });
 
-function checkAuth() {
+async function checkAuthAndLoadUser() {
     const token = localStorage.getItem('token');
     if (!token) {
         alert("Silakan login terlebih dahulu.");
         window.location.href = 'login.html';
+        return;
+    }
+
+    try {
+        const res = await fetch(`${API_URL}/api/users/profile`, { 
+            method: 'GET',
+            headers: { 
+                'Authorization': `Bearer ${token}`,
+                'Content-Type': 'application/json'
+            }
+        });
+
+        if (res.ok) {
+            const json = await res.json();
+            if (json.success) {
+                const user = json.data;
+                localStorage.setItem('user', JSON.stringify(user));
+                renderUserHeader(user);
+            }
+        } else {
+            const localUser = localStorage.getItem('user');
+            if (localUser) renderUserHeader(JSON.parse(localUser));
+        }
+
+    } catch (e) {
+        const localUser = localStorage.getItem('user');
+        if (localUser) renderUserHeader(JSON.parse(localUser));
+    }
+}
+
+function renderUserHeader(user) {
+    const userNameEl = document.querySelector('.user-profile span');
+    if (userNameEl) userNameEl.textContent = user.name.split(' ')[0];
+
+    const avatarEl = document.querySelector('.user-profile .avatar');
+    if (avatarEl) {
+        const initial = user.name.charAt(0).toUpperCase();
+        
+        if (user.profile_pic && !user.profile_pic.includes('default')) {
+            let imgUrl = user.profile_pic;
+            if (!imgUrl.startsWith('http')) {
+                imgUrl = `${API_URL}/${imgUrl}`;
+            }
+            imgUrl += `?t=${new Date().getTime()}`;
+
+            avatarEl.innerHTML = `
+                <img src="${imgUrl}" 
+                     style="width:100%; height:100%; object-fit:cover; border-radius:50%;"
+                     onerror="this.parentElement.innerHTML='${initial}'" 
+                >
+            `;
+            avatarEl.classList.remove('avatar-initial'); 
+        } else {
+            avatarEl.textContent = initial;
+            avatarEl.style.backgroundColor = '#f1c40f';
+            avatarEl.style.color = '#000';
+            avatarEl.style.display = 'flex';
+            avatarEl.style.alignItems = 'center';
+            avatarEl.style.justifyContent = 'center';
+            avatarEl.style.fontWeight = 'bold';
+            avatarEl.innerHTML = initial;
+        }
     }
 }
 
@@ -219,8 +281,8 @@ async function loadServices() {
         const json = await res.json();
         if (json.data) {
             container.innerHTML = json.data.map(s => {
-                let imgSrc = 'assets/images/default-service.jpg';
-                if(s.image && !s.image.includes('default')) {
+                let imgSrc = s.image || 'assets/images/default-service.jpg';
+                if(s.image && !s.image.startsWith('http')) {
                     imgSrc = `${API_URL}/${s.image}`;
                 }
                 
@@ -248,8 +310,8 @@ async function loadBarbers() {
         const json = await res.json();
         if (json.data) {
             container.innerHTML = json.data.map(b => {
-                let imgSrc = `https://ui-avatars.com/api/?name=${b.name}&background=random`;
-                if(b.image && !b.image.includes('default')) {
+                let imgSrc = b.image || `https://ui-avatars.com/api/?name=${b.name}&background=random`;
+                if(b.image && !b.image.startsWith('http')) {
                     imgSrc = `${API_URL}/${b.image}`;
                 }
 

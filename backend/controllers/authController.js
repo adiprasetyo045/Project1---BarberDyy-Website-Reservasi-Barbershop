@@ -64,7 +64,6 @@ exports.login = async (req, res) => {
 
 exports.updateProfile = async (req, res) => {
     try {
-        // 1. Cek User ID
         const userId = req.user ? req.user.id : null;
         if (!userId) {
             return res.status(401).json({ success: false, message: "Unauthorized: User ID tidak ditemukan." });
@@ -94,9 +93,7 @@ exports.updateProfile = async (req, res) => {
             paramIndex++;
         }
         
-        // 2. Cek File Upload (Cloudinary)
         if (req.file) {
-            // Pastikan path ada. Kalau Cloudinary gagal, req.file.path biasanya undefined.
             const imagePath = req.file.path || req.file.secure_url;
             if (imagePath) {
                 query += `, profile_pic = $${paramIndex}`;
@@ -108,7 +105,6 @@ exports.updateProfile = async (req, res) => {
         query += ` WHERE id = $${paramIndex} RETURNING id, name, email, phone, role, profile_pic, is_member, membership_status`;
         params.push(userId);
 
-        // 3. Eksekusi Query dengan Error Handling
         const result = await db.query(query, params);
         
         if (result.rows.length === 0) {
@@ -118,9 +114,7 @@ exports.updateProfile = async (req, res) => {
         res.json({ success: true, message: 'Profil berhasil diperbarui!', user: result.rows[0] });
 
     } catch (err) {
-        // LOG ERROR LENGKAP AGAR KITA TAHU PENYEBABNYA
-        console.error("❌ Update Profile Error (DETAIL):", JSON.stringify(err, null, 2));
-        console.error("❌ Pesan Error:", err.message);
+        console.error("Update Profile Error:", err);
         res.status(500).json({ success: false, message: 'Gagal update profil: ' + err.message });
     }
 };
@@ -141,13 +135,12 @@ exports.buyMembership = async (req, res) => {
         const result = await db.query(query, [proofImage, userId]);
         const updatedUser = result.rows[0];
 
-        // Email ke User (Fire & Forget)
         const userSubject = '⏳ Bukti Pembayaran Diterima';
         const userContent = `
             <h3>Halo ${updatedUser.name},</h3>
             <p>Terima kasih! Bukti pembayaran membership Anda sudah kami terima.</p>
         `;
-        // Cek dulu apakah sendEmail ada sebelum dipanggil (biar gak crash kalau email error)
+        
         try {
             sendEmail(updatedUser.email, userSubject, createTemplate(userSubject, userContent)).catch(e => console.error("Mail Error", e));
         } catch(e) { console.error("Email service skip"); }
@@ -185,8 +178,6 @@ exports.verifyMembership = async (req, res) => {
         const userCheck = await db.query("SELECT * FROM users WHERE id = $1", [userId]);
         if (userCheck.rows.length === 0) return res.status(404).json({ success: false, message: 'User tidak ditemukan' });
         
-        const user = userCheck.rows[0];
-
         if (action === 'approve') {
             await db.query(`
                 UPDATE users SET is_member = TRUE, membership_status = 'active', 

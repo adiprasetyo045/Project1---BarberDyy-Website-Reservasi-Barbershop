@@ -2,23 +2,26 @@ const db = require('../config/database');
 
 exports.getAllBookings = async (req, res) => {
     try {
-        const result = await db.query(`
+        const query = `
             SELECT 
                 b.id, 
-                u.name as customer, u.phone as user_phone, u.email as user_email,
+                u.name as customer_name, u.phone as customer_phone, u.email as user_email,
                 s.name as service_name,
                 br.name as barber_name,
                 b.booking_date, b.booking_time, b.end_time,
                 b.total_price, b.status, b.payment_method,
-                b.payment_provider, b.payment_account, b.payment_proof
+                b.payment_provider, b.payment_account, b.payment_proof,
+                b.created_at
             FROM bookings b
             LEFT JOIN users u ON b.user_id = u.id
             LEFT JOIN services s ON b.service_id = s.id
             LEFT JOIN barbers br ON b.barber_id = br.id
             ORDER BY b.booking_date DESC, b.booking_time DESC
-        `);
+        `;
+        const result = await db.query(query);
         res.json({ success: true, data: result.rows });
     } catch (err) {
+        console.error(err);
         res.status(500).json({ success: false, message: 'Server Error' });
     }
 };
@@ -31,7 +34,7 @@ exports.updateBookingStatus = async (req, res) => {
         if (status === 'canceled') status = 'cancelled'; 
 
         const result = await db.query(
-            "UPDATE bookings SET status = $1 WHERE id = $2 RETURNING *",
+            "UPDATE bookings SET status = $1, updated_at = NOW() WHERE id = $2 RETURNING *",
             [status, id]
         );
 
@@ -39,6 +42,7 @@ exports.updateBookingStatus = async (req, res) => {
         
         res.json({ success: true, message: 'Status berhasil diperbarui', data: result.rows[0] });
     } catch (err) {
+        console.error(err);
         res.status(500).json({ success: false, message: 'Gagal update status' });
     }
 };
@@ -102,6 +106,7 @@ exports.createBooking = async (req, res) => {
         res.status(201).json({ success: true, message: 'Booking Berhasil!', data: newBooking.rows[0] });
 
     } catch (err) {
+        console.error(err);
         res.status(500).json({ success: false, message: 'Server Error' });
     }
 };
@@ -131,7 +136,7 @@ exports.cancelBooking = async (req, res) => {
         const check = await db.query("SELECT * FROM bookings WHERE id = $1 AND user_id = $2", [bookingId, userId]);
         if (check.rows.length === 0) return res.status(404).json({ success: false, message: 'Booking tidak ditemukan.' });
         
-        await db.query("UPDATE bookings SET status = 'cancelled' WHERE id = $1", [bookingId]);
+        await db.query("UPDATE bookings SET status = 'cancelled', updated_at = NOW() WHERE id = $1", [bookingId]);
         res.json({ success: true, message: 'Booking berhasil dibatalkan.' });
 
     } catch (err) {

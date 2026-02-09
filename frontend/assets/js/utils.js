@@ -4,10 +4,10 @@ const API_BASE_URL = '';
 console.log("🚀 UTILS.JS: LOADED - SMART API PREFIX");
 
 /**
- * Fungsi Fetch Wrapper "Pintar"
+ * Fungsi Fetch Wrapper "Pintar" (Dinamakan fetchAuth agar sinkron dengan admin.js)
  * Otomatis menangani Token, JSON Header, dan Prefix /api
  */
-async function fetchAPI(endpoint, options = {}) {
+async function fetchAuth(endpoint, options = {}) {
     const token = localStorage.getItem('token');
     
     // 1. SETUP HEADER (Otomatis isi token jika ada)
@@ -27,12 +27,8 @@ async function fetchAPI(endpoint, options = {}) {
     };
 
     // 2. LOGIKA PINTAR URL (Auto-fix /api)
-    // Jika endpoint tidak dimulai dengan '/api' dan bukan link eksternal (http),
-    // kita tambahkan '/api' otomatis.
-    // Contoh: '/auth/login' -> '/api/auth/login'
     let finalEndpoint = endpoint;
     if (!finalEndpoint.startsWith('/api') && !finalEndpoint.startsWith('http')) {
-        // Pastikan ada slash di depan
         if (!finalEndpoint.startsWith('/')) {
             finalEndpoint = '/' + finalEndpoint;
         }
@@ -43,14 +39,13 @@ async function fetchAPI(endpoint, options = {}) {
         // 3. EKSEKUSI FETCH
         const response = await fetch(`${API_BASE_URL}${finalEndpoint}`, config);
         
-        // Handle 204 No Content (Sukses tapi kosong)
+        // Handle 204 No Content
         if (response.status === 204) return { success: true };
 
         // Handle Sesi Habis (401/403)
         if (response.status === 401 || response.status === 403) {
             console.warn("Sesi habis atau token tidak valid.");
             
-            // Cek agar tidak looping alert di halaman login sendiri
             if (!window.location.pathname.includes('login.html') && !window.location.pathname.includes('index.html')) {
                 alert("Sesi Anda telah habis. Silakan login kembali.");
                 localStorage.clear();
@@ -126,7 +121,7 @@ function redirectIfLoggedIn() {
         try {
             const user = JSON.parse(userStr);
             // Redirect sesuai role
-            if (user.role === 'admin') {
+            if (user.role === 'admin' || user.role === 'owner') {
                 window.location.href = 'admin-dashboard.html';
             } else {
                 window.location.href = 'dashboard.html';
@@ -149,7 +144,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const isPublic = publicPages.some(page => path.endsWith(page) || path === page || path.endsWith('/'));
 
     if (!isPublic) {
-        // Kalau halaman private (dashboard, booking, dll), WAJIB LOGIN
+        // Kalau halaman private (dashboard, booking, admin), WAJIB LOGIN
         requireAuth(); 
     } else {
         // Kalau halaman Login/Register, jika sudah login LEMPAR ke Dashboard

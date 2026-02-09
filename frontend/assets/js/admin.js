@@ -1,46 +1,32 @@
 const API_URL = '';
 
-// ==========================================
-// 1. GLOBAL INITIALIZATION & ROUTING
-// ==========================================
 document.addEventListener('DOMContentLoaded', () => {
     checkAuth();
-    
-    // [FIX 1] Load data header (Foto & Nama) dari LocalStorage saat ganti halaman
-    // Agar tidak reset ke default saat pindah menu
     loadAdminHeader(); 
-    
-    setupGlobalEvents(); // Setup Logout, Modal, Dropdown, Tabs
-    setupAdminProfile(); // [FIX 2] Inisialisasi Form Edit Profile Admin
+    setupGlobalEvents(); 
+    setupAdminProfile(); 
 
-    // --- AUTO NOTIFICATION CHECKER ---
-    checkNotifications(); // Cek saat load
-    setInterval(checkNotifications, 30000); // Cek tiap 30 detik
+    checkNotifications(); 
+    setInterval(checkNotifications, 30000); 
 
-    // --- DETEKSI HALAMAN & LOAD MODUL YANG SESUAI ---
     const path = window.location.pathname;
 
     if (path.includes('admin-dashboard.html')) {
-        console.log("✅ Load Dashboard Module");
         loadDashboardData();
     } 
     else if (path.includes('admin-services.html')) {
-        console.log("✅ Load Services Module");
         loadServicesData();
         setupServiceForm();
     } 
     else if (path.includes('admin-barbers.html')) {
-        console.log("✅ Load Barbers Module");
         loadBarbersData();
         setupBarberForm();
     }
     else if (path.includes('admin-users.html')) {
-        console.log("✅ Load Users Module");
         loadUsersData();
     }
 });
 
-// --- AUTH HELPER ---
 function checkAuth() {
     const token = localStorage.getItem('token');
     if (!token) {
@@ -49,39 +35,36 @@ function checkAuth() {
     }
 }
 
-// [FIX 1 - IMPLEMENTASI] UPDATE HEADER DARI LOCALSTORAGE
 function loadAdminHeader() {
     try {
         const userStr = localStorage.getItem('user');
         if (userStr) {
             const user = JSON.parse(userStr);
             
-            // 1. Update Nama
             document.querySelectorAll('.user-name').forEach(el => {
                 if (user.name) el.innerText = user.name;
             });
 
-            // 2. Update Foto Profil
             if (user.profile_pic) {
-                // Tambahkan timestamp agar tidak cache
-                const imgUrl = `https://project1-barber-dyy-website-reservasi-barbershop-l0xeswl4b.const API_URL = ''/${user.profile_pic}?t=${new Date().getTime()}`;
+                let imgUrl = user.profile_pic;
+                if (!imgUrl.startsWith('http')) {
+                    imgUrl = `${API_URL}/${user.profile_pic}`;
+                }
+                imgUrl += `?t=${new Date().getTime()}`;
                 
-                // Update ikon di header
                 document.querySelectorAll('.user-profile img').forEach(img => {
                     img.src = imgUrl;
                 });
                 
-                // Update preview di modal edit (jika ada)
                 const preview = document.getElementById('previewPhoto');
                 if (preview) preview.src = imgUrl;
             }
         }
     } catch (e) {
-        console.error("Gagal memuat profil header", e);
+        console.error(e);
     }
 }
 
-// --- FETCH HELPER ---
 async function fetchAuth(url, options = {}) {
     const token = localStorage.getItem('token');
     const headers = {
@@ -92,7 +75,6 @@ async function fetchAuth(url, options = {}) {
     try {
         const response = await fetch(url, { ...options, headers });
         if (response.status === 401) {
-            console.warn("Session Expired. Redirecting...");
             localStorage.clear();
             alert("Sesi berakhir. Silakan login kembali.");
             window.location.href = '../login.html';
@@ -100,19 +82,15 @@ async function fetchAuth(url, options = {}) {
         }
         return response;
     } catch (error) {
-        console.error("Fetch Error:", error);
+        console.error(error);
         throw error;
     }
 }
 
-// ============================================================
-// 2. MODUL ADMIN PROFILE (FIX: Agar Admin Bisa Ganti Foto/Nama)
-// ============================================================
 function setupAdminProfile() {
     const form = document.getElementById('editProfileForm');
-    if (!form) return; // Skip jika form tidak ada di halaman ini
+    if (!form) return; 
 
-    // A. Preview Gambar saat dipilih
     window.previewImage = function(input) {
         if (input.files && input.files[0]) {
             const reader = new FileReader();
@@ -123,7 +101,6 @@ function setupAdminProfile() {
         }
     };
 
-    // B. Handle Submit Form
     form.addEventListener('submit', async (e) => {
         e.preventDefault();
         
@@ -143,7 +120,7 @@ function setupAdminProfile() {
             if (file) formData.append('profile_pic', file);
 
             const token = localStorage.getItem('token');
-            const res = await fetch(`${API_URL}/auth/update-profile`, {
+            const res = await fetch(`${API_URL}/api/auth/update-profile`, {
                 method: 'PUT',
                 headers: { 'Authorization': `Bearer ${token}` },
                 body: formData
@@ -152,11 +129,10 @@ function setupAdminProfile() {
             const json = await res.json();
 
             if (json.success) {
-                // [PENTING] Update LocalStorage agar data tersimpan saat pindah halaman
                 localStorage.setItem('user', JSON.stringify(json.user));
                 
-                alert("✅ Profil Admin Berhasil Diperbarui!");
-                loadAdminHeader(); // Refresh header langsung
+                alert("Profil Admin Berhasil Diperbarui!");
+                loadAdminHeader(); 
                 
                 document.getElementById('editPassword').value = '';
                 closeModal('profileModal');
@@ -174,27 +150,22 @@ function setupAdminProfile() {
     });
 }
 
-// ============================================================
-// 3. MODUL DASHBOARD & NOTIFIKASI
-// ============================================================
-
-// [BARU] FUNGSI CEK NOTIFIKASI LONCENG
 async function checkNotifications() {
     try {
-        const res = await fetchAuth(`${API_URL}/bookings/admin/notifications`);
+        const res = await fetchAuth(`${API_URL}/api/bookings/admin/notifications`);
         if (res) {
             const json = await res.json();
             const badge = document.getElementById('notif-badge');
             if (badge) {
                 if (json.success && json.count > 0) {
-                    badge.style.display = 'block'; // Tampilkan titik merah
+                    badge.style.display = 'block'; 
                 } else {
                     badge.style.display = 'none';
                 }
             }
         }
     } catch (e) {
-        console.error("Gagal cek notifikasi", e);
+        console.error(e);
     }
 }
 
@@ -203,7 +174,7 @@ async function loadDashboardData() {
     if(!tableBody) return;
 
     try {
-        const res = await fetchAuth(`${API_URL}/bookings/admin/all`);
+        const res = await fetchAuth(`${API_URL}/api/bookings/admin/all`);
         if (!res) return;
         const json = await res.json();
 
@@ -214,7 +185,7 @@ async function loadDashboardData() {
             renderCharts(bookings);
         }
     } catch (err) {
-        console.error("Dashboard Error:", err);
+        console.error(err);
         tableBody.innerHTML = `<tr><td colspan="7" class="text-center text-danger">Gagal koneksi server.</td></tr>`;
     }
 }
@@ -250,7 +221,10 @@ function renderBookingTable(bookings, tableBody) {
         if (b.payment_method === 'online') {
             payMethod = '<span style="color:#3498db; font-weight:bold"><i class="fas fa-university"></i> Transfer</span>';
             if (b.payment_proof) {
-                const imgUrl = `https://project1-barber-dyy-website-reservasi-barbershop-l0xeswl4b.const API_URL = ''/${b.payment_proof}`;
+                let imgUrl = b.payment_proof;
+                if (!imgUrl.startsWith('http')) {
+                    imgUrl = `${API_URL}/${b.payment_proof}`;
+                }
                 proofBtn = `<button class="btn-view-proof" onclick="showProof('${imgUrl}')"><i class="fas fa-eye"></i> Lihat</button>`;
             } else {
                 proofBtn = '<span class="text-danger small">No Proof</span>';
@@ -272,7 +246,7 @@ function renderBookingTable(bookings, tableBody) {
         return `
             <tr>
                 <td><strong>${dateStr}</strong><br><small>${timeStr}</small></td>
-                <td>${b.customer || 'Guest'}<br><small>${b.user_phone || '-'}</small></td>
+                <td>${b.customer_name || 'Guest'}<br><small>${b.customer_phone || '-'}</small></td>
                 <td>${b.service_name}</td>
                 <td>${payMethod}</td>
                 <td>${proofBtn}</td>
@@ -335,18 +309,12 @@ function renderCharts(bookings) {
     });
 }
 
-// ============================================================
-// 4. MODUL SERVICES, BARBERS, USERS (ORIGINAL CODE)
-// ============================================================
-// Saya biarkan bagian ini PERSIS seperti kode awal Anda
-// Agar tampilan Services & Barbers tidak berantakan lagi
-
 async function loadServicesData() {
     const tbody = document.getElementById('services-table-body');
     if(!tbody) return;
 
     try {
-        const res = await fetchAuth(`${API_URL}/services`);
+        const res = await fetchAuth(`${API_URL}/api/services`);
         if (!res) return;
         const json = await res.json();
         if(json.data) {
@@ -378,7 +346,7 @@ function setupServiceForm() {
             };
 
             try {
-                const res = await fetchAuth(`${API_URL}/services`, {
+                const res = await fetchAuth(`${API_URL}/api/services`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(data)
@@ -397,7 +365,7 @@ function setupServiceForm() {
 window.deleteService = async function(id) {
     if(!confirm("Hapus layanan ini?")) return;
     try {
-        const res = await fetchAuth(`${API_URL}/services/${id}`, {
+        const res = await fetchAuth(`${API_URL}/api/services/${id}`, {
             method: 'DELETE'
         });
         if(res && res.ok) loadServicesData();
@@ -409,7 +377,7 @@ async function loadBarbersData() {
     if(!tbody) return;
 
     try {
-        const res = await fetchAuth(`${API_URL}/barbers`);
+        const res = await fetchAuth(`${API_URL}/api/barbers`);
         if (!res) return;
         const json = await res.json();
         if(json.data) {
@@ -440,7 +408,7 @@ function setupBarberForm() {
             };
 
             try {
-                const res = await fetchAuth(`${API_URL}/barbers`, {
+                const res = await fetchAuth(`${API_URL}/api/barbers`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(data)
@@ -459,7 +427,7 @@ function setupBarberForm() {
 window.deleteBarber = async function(id) {
     if(!confirm("Hapus barber ini?")) return;
     try {
-        const res = await fetchAuth(`${API_URL}/barbers/${id}`, {
+        const res = await fetchAuth(`${API_URL}/api/barbers/${id}`, {
             method: 'DELETE'
         });
         if(res && res.ok) loadBarbersData();
@@ -471,7 +439,7 @@ async function loadUsersData() {
     if(!tbody) return;
 
     try {
-        const res = await fetchAuth(`${API_URL}/users`);
+        const res = await fetchAuth(`${API_URL}/api/auth`);
         if (!res) return;
         const json = await res.json();
 
@@ -500,9 +468,6 @@ async function loadUsersData() {
     }
 }
 
-// ============================================================
-// 7. GLOBAL UTILS (Modal, Logout, Dropdown)
-// ============================================================
 function setupGlobalEvents() {
     window.toggleDropdown = function(id) {
         const el = document.getElementById(id);
@@ -544,7 +509,7 @@ function setupGlobalEvents() {
     window.updateStatus = async function(id, status) {
         if(!confirm(`Ubah status jadi ${status}?`)) return;
         try {
-            const res = await fetchAuth(`${API_URL}/bookings/${id}`, {
+            const res = await fetchAuth(`${API_URL}/api/bookings/admin/${id}/status`, {
                 method: 'PUT',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ status })
@@ -559,7 +524,6 @@ function setupGlobalEvents() {
         } catch(e) { console.error(e); }
     };
 
-    // Tab Switching (Dashboard)
     window.switchTab = function(tabName) {
         document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
         document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
@@ -576,18 +540,21 @@ function setupGlobalEvents() {
         }
     };
     
-    // Fungsi loadMembershipRequests (jika belum ada)
     window.loadMembershipRequests = async function() {
         const tbody = document.getElementById('membership-request-list');
         if(!tbody) return;
         try {
-            const res = await fetchAuth(`${API_URL}/auth/pending-memberships`);
+            const res = await fetchAuth(`${API_URL}/api/auth/pending-memberships`);
             if (!res) return;
             const json = await res.json();
 
             if (json.success && json.data.length > 0) {
                 tbody.innerHTML = json.data.map(u => {
-                    const imgPath = u.payment_proof ? `https://project1-barber-dyy-website-reservasi-barbershop-l0xeswl4b.const API_URL = ''/${u.payment_proof}` : '#';
+                    let imgPath = u.payment_proof;
+                    if (imgPath && !imgPath.startsWith('http')) {
+                        imgPath = `${API_URL}/${u.payment_proof}`;
+                    }
+                    
                     return `
                         <tr>
                             <td>${new Date(u.updated_at).toLocaleDateString('id-ID')}</td>
@@ -615,7 +582,7 @@ function setupGlobalEvents() {
         if(!confirm(`Proses membership user ini?`)) return;
         
         try {
-            const res = await fetchAuth(`${API_URL}/auth/verify-membership`, {
+            const res = await fetchAuth(`${API_URL}/api/auth/verify-membership`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ userId, action })

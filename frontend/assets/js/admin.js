@@ -170,23 +170,38 @@ async function checkNotifications() {
 }
 
 async function loadDashboardData() {
+    console.log("🚀 Memulai Load Dashboard...");
+    
     const tableBody = document.getElementById('recent-orders-table');
-    if(!tableBody) return;
+    
+    if(!tableBody) {
+        alert("❌ GAWAT! Tabel tidak ditemukan.\n\nJavaScript mencari: id='recent-orders-table'\nTapi di HTML admin-dashboard.html tidak ada id itu.\n\nSolusi: Cek file HTML, pastikan <tbody> punya id='recent-orders-table'.");
+        console.error("❌ ID MISMATCH: Element 'recent-orders-table' not found.");
+        return;
+    }
 
     try {
         const res = await fetchAuth(`${API_URL}/api/bookings/admin/all`);
-        if (!res) return;
+        if (!res) {
+             tableBody.innerHTML = `<tr><td colspan="7" class="text-center text-danger">Gagal Fetch Data (Cek Network Tab)</td></tr>`;
+             return;
+        }
+
         const json = await res.json();
+        console.log("📦 Data dari Server:", json);
 
         if (json.success) {
             const bookings = json.data;
             updateStats(bookings);
             renderBookingTable(bookings, tableBody);
             renderCharts(bookings);
+        } else {
+             alert("❌ Server Error: " + json.message);
         }
     } catch (err) {
         console.error(err);
-        tableBody.innerHTML = `<tr><td colspan="7" class="text-center text-danger">Gagal koneksi server.</td></tr>`;
+        tableBody.innerHTML = `<tr><td colspan="7" class="text-center text-danger">Error JS: ${err.message}</td></tr>`;
+        alert("❌ Terjadi Error JavaScript: " + err.message);
     }
 }
 
